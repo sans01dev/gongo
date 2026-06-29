@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.34</title>
+<title>공원갈까 v6.37</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -189,6 +189,8 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .h-weather{font-size:10px;color:#2C1810;font-weight:800;background:#fff;padding:5px 11px;border-radius:999px;display:inline-block;white-space:nowrap;position:relative;z-index:3;border:2px solid #2C1810;box-shadow:2px 2px 0 #2C1810}
 .gps-btn{background:#fff;border:2px solid #2C1810;padding:4px 9px;color:#2C1810;font-size:9.5px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:4px;letter-spacing:.2px;border-radius:16px;box-shadow:2px 2px 0 #2C1810;position:relative;z-index:3}
 .gps-dot{width:6px;height:6px;background:#FF6B35;border-radius:50%}
+.gps-pin{display:block;flex-shrink:0}
+.gps-pin.s{animation:blink .8s infinite}
 .gps-dot.s{background:#FF6B35;animation:blink .8s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .h-rule{display:none}
@@ -465,7 +467,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
     </div>
     <div class="h-gps-col">
       <button class="gps-btn" onclick="reLoc()">
-        <div class="gps-dot s" id="gpsDot"></div>
+        <svg class="gps-pin s" id="gpsDot" width="11" height="13" viewBox="0 0 24 30" fill="none"><path d="M12 0C5.4 0 0 5.4 0 12c0 8.5 12 18 12 18s12-9.5 12-18C24 5.4 18.6 0 12 0z" fill="#E8202A"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>
         <span id="gpsText">위치 확인 중</span>
       </button>
       <div class="h-weather" id="hWeather" style="display:none"></div>
@@ -630,7 +632,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
     <div class="rec-prog-cap"><span id="rcPrev">지난달 0번</span><span id="rcNow">이번 달 <b>0</b>번</span></div>
   </div>
   <div class="rec-detail" id="rcDetail" style="display:none"></div>
-  <button class="rec-share" id="rcShare">📤 내 산책 기록 공유하기</button>
+  <button class="rec-share" id="rcShare"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="vertical-align:-3px;margin-right:5px"><circle cx="18" cy="5" r="3" fill="#fff"/><circle cx="6" cy="12" r="3" fill="#fff"/><circle cx="18" cy="19" r="3" fill="#fff"/><path d="M8.6 10.7 15.4 6.3M8.6 13.3 15.4 17.7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>내 산책 기록 공유하기</button>
   <div class="rec-disc">* 공원에 다녀온 날을 가볍게 기록하는 산책 일기예요 🐾</div>
 </div>
 
@@ -736,12 +738,28 @@ function startApp(){
   document.getElementById('startBtn').textContent='위치 확인 중...';
   geoLocate(true);
 }
+function fetchMyRegion(){
+  if(!myLat) return;
+  fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+myLat+'&longitude='+myLng+'&localityLanguage=ko')
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(!j) return;
+      var city=j.city||j.principalSubdivision||'';        // 예: 거제시
+      var dong=j.locality||'';                              // 예: 능포동
+      // city가 동/구 단위로 잡히고 locality가 비면 보정
+      var label='';
+      if(city&&dong&&city!==dong) label=city+' '+dong;
+      else label=dong||city||'';
+      if(label) document.getElementById('gpsText').textContent=label;
+    }).catch(function(){});
+}
 function geoLocate(fromIntro){
   const onOk=(pos)=>{
     myLat=pos.coords.latitude;
     myLng=pos.coords.longitude;
-    document.getElementById('gpsDot').className='gps-dot';
+    document.getElementById('gpsDot').className='gps-pin';
     document.getElementById('gpsText').textContent='위치 확인됨';
+    fetchMyRegion();
     if(fromIntro){
       const el=document.getElementById('loading');
       el.classList.add('hide');
@@ -757,7 +775,7 @@ function geoLocate(fromIntro){
       else if(err.code===2) msg='위치를 찾을 수 없어요 · 폰 GPS를 켜주세요';
       else if(err.code===3) msg='위치 확인 시간 초과 · 다시 시도해 주세요';
     }
-    document.getElementById('gpsText').textContent='위치 오류';
+    document.getElementById('gpsDot').className='gps-pin';document.getElementById('gpsText').textContent='위치 오류';
     if(fromIntro){
       myLat=37.5665; myLng=126.9780;
       const el=document.getElementById('loading');
@@ -772,7 +790,7 @@ function geoLocate(fromIntro){
     {timeout:9000, maximumAge:0, enableHighAccuracy:true});
 }
 function reLoc(){
-  document.getElementById('gpsDot').className='gps-dot s';
+  document.getElementById('gpsDot').className='gps-pin s';
   document.getElementById('gpsText').textContent='위치 확인 중';
   geoLocate(false);
 }
@@ -1175,7 +1193,7 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
       <div class="modal-title-row">
         <div class="modal-title serif" id="mTitle">—</div>
         <div class="modal-fac-row" id="mFacRow"></div>
-        <button class="modal-share-btn" id="shareBtn">공유</button>
+        <button class="modal-share-btn" id="shareBtn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px;margin-right:3px"><circle cx="18" cy="5" r="3" fill="#D4621A"/><circle cx="6" cy="12" r="3" fill="#D4621A"/><circle cx="18" cy="19" r="3" fill="#D4621A"/><path d="M8.6 10.7 15.4 6.3M8.6 13.3 15.4 17.7" stroke="#D4621A" stroke-width="2" stroke-linecap="round"/></svg>공유</button>
       </div>
       <div class="modal-dist" id="mDist"></div>
       <div class="modal-tags" id="mTags"></div>
