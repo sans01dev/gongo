@@ -635,7 +635,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   </div>
   <div class="rec-cal-card">
     <div class="rec-cal-head">
-      <div class="rec-cal-h-wrap"><button class="rc-nav" id="rcPrev" onclick="calMove(-1)">‹</button><div class="rec-cal-h" id="rcCalH">산책한 날</div><button class="rc-nav" id="rcNext" onclick="calMove(1)">›</button></div>
+      <div class="rec-cal-h-wrap"><button class="rc-nav" id="calPrev" onclick="calMove(-1)">‹</button><div class="rec-cal-h" id="rcCalH">산책한 날</div><button class="rc-nav" id="calNext" onclick="calMove(1)">›</button></div>
       <div class="rec-cal-hint">날짜를 누르면<br>그날 다녀온 공원이 보여요</div>
     </div>
     <div class="rec-grid" id="rcGrid"></div>
@@ -1654,7 +1654,7 @@ var _calY=null, _calM=null;
     var isThisMonth=(y===now.getFullYear()&&m===now.getMonth());
     document.getElementById('rcCalH').textContent=(m+1)+'월 산책한 날';
     // 다음달 화살표 활성/비활성 (미래는 못 감)
-    var nextBtn=document.getElementById('rcNext');
+    var nextBtn=document.getElementById('calNext');
     if(nextBtn){ nextBtn.style.visibility=isThisMonth?'hidden':'visible'; }
     var first=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
     var days=loadDays(),todayD=now.getDate();
