@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.47</title>
+<title>공원갈까 v6.48</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -395,6 +395,9 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .rec-cal-card{background:var(--card);border-radius:16px;padding:16px 14px;margin-top:14px;
   box-shadow:0 2px 12px rgba(61,35,20,.08)}
 .rec-cal-h{font-size:16px;font-weight:800;color:var(--ink);margin:0;flex-shrink:0}
+.rec-cal-h-wrap{display:flex;align-items:center;gap:6px}
+.rc-nav{border:none;background:#F0E6DA;color:#8E5A2A;width:28px;height:28px;border-radius:8px;font-size:18px;font-weight:900;line-height:1;cursor:pointer;padding:0;flex-shrink:0}
+.rc-nav:active{background:#E3D2BE}
 .rec-cal-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:2px 2px 12px}
 .rec-cal-hint{font-size:10px;font-weight:600;color:var(--sub);text-align:right;line-height:1.35}
 .rec-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
@@ -632,7 +635,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   </div>
   <div class="rec-cal-card">
     <div class="rec-cal-head">
-      <div class="rec-cal-h" id="rcCalH">산책한 날</div>
+      <div class="rec-cal-h-wrap"><button class="rc-nav" id="rcPrev" onclick="calMove(-1)">‹</button><div class="rec-cal-h" id="rcCalH">산책한 날</div><button class="rc-nav" id="rcNext" onclick="calMove(1)">›</button></div>
       <div class="rec-cal-hint">날짜를 누르면<br>그날 다녀온 공원이 보여요</div>
     </div>
     <div class="rec-grid" id="rcGrid"></div>
@@ -1418,7 +1421,6 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
       saveDays(days);saveStreak(st);
       fetchVisitMeta(today);
       showToast(msg||(modalPark.name+' \u2014 다녀왔어요! \u{1F43E}'));
-      maybeAskReview();
     }else{
       days[today].visited=modalPark.name;
       days[today].plat=modalPark.lat; days[today].plng=modalPark.lng; days[today].paddr=modalPark.addr;
@@ -1445,6 +1447,7 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
   }
 
   var _selDay=null;
+var _calY=null, _calM=null;
   var MOCHI='모찌';
   // 누적(산책한 날 수) 기반 모찌 성장
   var TIERS=[
@@ -1645,8 +1648,14 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
     return '<svg'+attr+' viewBox="14 16 70 70" aria-hidden="true">'+pawShape(fill)+'</svg>';
   }
   function renderCalendar(){
-    var now=new Date(),y=now.getFullYear(),m=now.getMonth();
+    var now=new Date();
+    if(_calY==null){ _calY=now.getFullYear(); _calM=now.getMonth(); }
+    var y=_calY,m=_calM;
+    var isThisMonth=(y===now.getFullYear()&&m===now.getMonth());
     document.getElementById('rcCalH').textContent=(m+1)+'월 산책한 날';
+    // 다음달 화살표 활성/비활성 (미래는 못 감)
+    var nextBtn=document.getElementById('rcNext');
+    if(nextBtn){ nextBtn.style.visibility=isThisMonth?'hidden':'visible'; }
     var first=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
     var days=loadDays(),todayD=now.getDate();
     var col=tierFor(totalVisits()).paw;
@@ -1658,13 +1667,43 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
       if(rec){
         if(rec.forgiven){cls+=' rest';inner='<span class="rc-emo">'+pawSVG('#E0D2C0')+'</span>';}
         else{cls+=' on';inner='<span class="rc-emo">'+pawSVG(col)+'</span>';}
-      }else if(dn>todayD)cls+=' dim';
+      }else if(isThisMonth&&dn>todayD)cls+=' dim';
       if(key===_selDay)cls+=' sel';
       html+='<div class="'+cls+'" data-key="'+key+'"'+(rec&&!rec.forgiven?' data-has="1"':'')+'>'+
             '<span class="rec-num">'+dn+'</span>'+inner+'</div>';
     }
     document.getElementById('rcGrid').innerHTML=html;
   }
+  function calMove(delta){
+    var now=new Date();
+    if(_calY==null){ _calY=now.getFullYear(); _calM=now.getMonth(); }
+    var nm=_calM+delta;
+    var ny=_calY+Math.floor(nm/12);
+    nm=((nm%12)+12)%12;
+    // 미래 월 차단
+    if(ny>now.getFullYear()||(ny===now.getFullYear()&&nm>now.getMonth())) return;
+    _calY=ny; _calM=nm;
+    renderCalendar();
+  }
+  window.calMove=calMove;
+  // 달력 좌우 스와이프로 월 이동
+  (function(){
+    var grid=document.getElementById('rcGrid');
+    if(!grid) return;
+    var sx=0,sy=0,tracking=false;
+    grid.addEventListener('touchstart',function(e){
+      if(e.touches.length!==1)return;
+      sx=e.touches[0].clientX; sy=e.touches[0].clientY; tracking=true;
+    },{passive:true});
+    grid.addEventListener('touchend',function(e){
+      if(!tracking)return; tracking=false;
+      var dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+      if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){
+        if(dx>0) calMove(-1);   // 오른쪽으로 밀기 → 이전 달
+        else calMove(1);        // 왼쪽으로 밀기 → 다음 달
+      }
+    },{passive:true});
+  })();
   function renderVisitDetail(){
     var box=document.getElementById('rcDetail');
     if(!_selDay){box.style.display='none';return;}
