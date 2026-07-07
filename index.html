@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.51</title>
+<title>공원갈까 v6.52</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -1428,29 +1428,15 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
     }
   }
 
-  /* ============================================================
-   공원갈까 — 공원 전국 순위 (Firebase Realtime DB)
-   공원별 방문수 기준 전국/지역 랭킹. 데이터 자동 집계.
-   San의 검증된 랭킹 방식(REST fetch) 그대로.
-   ============================================================
-   [삽입 방법]
-   1) 이 블록 전체를 <script> 안, 전역(함수 밖)에 붙여넣기
-   2) stampVisit()의 first 블록에 pushParkRank(modalPark.name, modalPark.dong) 추가
-   3) 기록 탭에서 fetchParkRank로 순위 조회 후 표시
-   ============================================================ */
-
-/* --- Firebase 설정 (기존 sandol 프로젝트 재사용, path 분리) --- */
+  /* 공원갈까 — 공원 전국 순위 (Firebase Realtime DB)
+   공원별 방문수 기준 전국/지역 랭킹. 자동 집계. San 검증 방식(REST fetch). */
 var GONGO_FB_URL = 'https://sandol-13f4e-default-rtdb.asia-southeast1.firebasedatabase.app';
 var GONGO_PARK_PATH = 'gongo_park_rank';
 function gongoFbOn(){ return GONGO_FB_URL && GONGO_FB_URL.indexOf('https://')===0; }
-
-/* --- 공원 고유 키 (이름+동네로 구분) --- */
 function gongoParkKey(name, dong){
   var raw=(name||'')+'_'+(dong||'');
   return raw.replace(/[.#$\/\[\]]/g,'_').slice(0,120);
 }
-
-/* ── 공원 방문 시 그 공원 카운트 +1 (자동 집계) ── */
 function pushParkRank(park, dong){
   if(!gongoFbOn() || !park) return;
   try{
@@ -1466,8 +1452,6 @@ function pushParkRank(park, dong){
       }).catch(function(){});
   }catch(e){}
 }
-
-/* ── 공원 순위 조회: 전국 등수 + 지역 등수 + 총 방문수 ── */
 function fetchParkRank(park, dong, cb){
   if(!gongoFbOn()){ cb(null); return; }
   var key=gongoParkKey(park, dong);
@@ -1482,11 +1466,7 @@ function fetchParkRank(park, dong, cb){
       if(natRank===0){ cb(null); return; }
       var regionArr=arr.filter(function(x){return x.region===(dong||'');});
       var regRank=regionArr.findIndex(function(x){return x.key===key;})+1;
-      cb({
-        natRank:natRank, natTotal:arr.length,
-        regRank:regRank, regTotal:regionArr.length,
-        region:dong, count:(data[key]?data[key].count:0)
-      });
+      cb({ natRank:natRank, natTotal:arr.length, regRank:regRank, regTotal:regionArr.length, region:dong, count:(data[key]?data[key].count:0) });
     }).catch(function(){ cb(null); });
 }
 
