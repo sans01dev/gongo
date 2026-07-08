@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.52</title>
+<title>공원갈까 v6.53</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -122,11 +122,12 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   to{transform:scale(1);opacity:1}
 }
 .lo-box-text{
-  font-size:15px;font-weight:800;color:#2C1810;
+  font-size:16px;font-weight:800;color:#2C1810;
   line-height:1.5;letter-spacing:-.3px
 }
 .lo-box-text em{color:#FF6B35;font-style:normal}
 .lo-box-text strong{color:#3DC9B0}
+.lo-hope{margin:6px auto 20px;font-size:15px;font-weight:700;color:#7A6A55;text-align:center;letter-spacing:-.2px;animation:popIn .5s cubic-bezier(.34,1.56,.64,1) .3s both}
 .lo-feats{display:flex;gap:7px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;animation:popIn .5s cubic-bezier(.34,1.56,.64,1) .36s both}
 .lo-feat{background:rgba(255,255,255,.9);border:2px solid #2C1810;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:800;color:#2C1810;box-shadow:2px 2px 0 #2C1810}
 
@@ -347,6 +348,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 /* === 기록(일기) 탭 === */
 .visit-btn{width:100%;margin-top:10px;border:0;background:var(--accent);color:#fff;font-weight:800;
   font-size:16px;padding:14px;border-radius:12px;cursor:pointer;letter-spacing:.2px}
+.visit-cheer{margin-top:12px;text-align:center;font-size:16px;font-weight:700;color:#3D9970;background:#F0F9F4;border:1.5px solid #CDEBD8;border-radius:12px;padding:14px 16px;line-height:1.5;}
 .visit-btn.done{background:#FFE8D6;color:var(--accent);border:2px solid var(--accent)}
 /* === 모찌 성장 카드 === */
 .grow-card{display:flex;gap:14px;align-items:center;background:var(--card);border-radius:18px;
@@ -419,9 +421,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .rec-prog-cap b{color:var(--accent)}
 .rec-detail{background:var(--card);border-radius:14px;padding:14px 16px;margin-top:14px;box-shadow:0 2px 12px rgba(61,35,20,.08)}
 .rec-detail .d-date{font-size:15px;font-weight:800;color:var(--ink)}
-.rec-detail .d-park{font-size:15px;font-weight:800;color:var(--accent);margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.d-park-name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.d-park-rank{flex:0 0 auto;font-size:13px;font-weight:800;color:#fff;background:var(--accent);padding:3px 11px;border-radius:11px}
+.rec-detail .d-park{font-size:15px;font-weight:800;color:var(--accent);margin-top:6px}
 .rec-detail .d-meta{font-size:13px;font-weight:600;color:var(--sub);margin-top:4px}
 .rec-detail .d-cheer{color:#2FB89F;font-weight:700}
 .rec-share{margin-top:16px;width:100%;border:0;background:var(--accent);color:#fff;font-weight:800;
@@ -454,6 +454,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
     <div class="lo-box">
       <div class="lo-box-text">가까운 공원에서<br><em>가볍게</em> 산책 한 바퀴</div>
     </div>
+    <div class="lo-hope" id="loHope"></div>
 
     <!-- 기능 안내 칩 -->
     <div class="lo-feats">
@@ -585,10 +586,6 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
     <div class="info-item">
       <div class="info-item-label">기록 탭</div>
       <div class="info-item-text">달력에 발자국이 하루하루 쌓이고, 연속 일수도 확인할 수 있어요.<br>날짜를 누르면 그날 다녀온 공원이 보여요.</div>
-    </div>
-    <div class="info-item">
-      <div class="info-item-label">공원 순위</div>
-      <div class="info-item-text">날짜를 눌러 다녀온 공원을 보면, 그 공원이 <b>전국에서 몇 위</b>인지 함께 나와요.<br>사람들이 많이 다녀온 공원일수록 순위가 높아요. 내가 자주 가면 그 공원 순위도 올라가요 🚶</div>
     </div>
     <div class="info-item">
       <div class="info-item-label">모찌 키우기</div>
@@ -1044,9 +1041,17 @@ function sharePark(){
   }
 }
 // 공유 버튼 이벤트 바인딩 (inline onclick 대신 addEventListener — WebView 제스처 컨텍스트 유지)
+var INTRO_MSGS=["오늘도 나오셨네요 🌿","가볍게 한 바퀴 걸어볼까요 🚶","오늘 날씨, 산책하기 좋아요 🌤️","천천히 걸으며 시작해요 🍃","오늘도 나를 위한 한 걸음 🌱","잠깐 나가서 바람 쐬어요 🌾","오늘도 건강하게, 반가워요 💚","가까운 공원 한 바퀴 어때요 🌳","오늘의 산책, 함께해요 🐾","몸도 마음도 가볍게 🍀","오늘도 좋은 하루 만들어요 ☀️","산책하기 딱 좋은 날이에요 🌸","천천히, 나의 속도로 걸어요 🌿","오늘도 한 걸음 내디뎌봐요 🌱","바깥 공기가 기다려요 🌾","오늘도 나와 줘서 반가워요 💛","가볍게 걷고 오면 개운해요 🍃","오늘도 건강 챙기는 하루 💪","잠깐의 산책이 하루를 바꿔요 🌳","오늘도 나를 아끼는 시간 💚"];
 document.addEventListener('DOMContentLoaded',function(){
   var sb=document.getElementById('shareBtn');
   if(sb) sb.addEventListener('click',sharePark);
+  // 인트로 희망 문구 랜덤 표시 (앱 진입 시, 제목 밑)
+  try{
+    var lh=document.getElementById('loHope');
+    if(lh && typeof INTRO_MSGS!=='undefined'){
+      lh.textContent=INTRO_MSGS[Math.floor(Math.random()*INTRO_MSGS.length)];
+    }
+  }catch(e){}
 });
 function openGoogleMap(){
   if(!modalPark) return;
@@ -1291,6 +1296,7 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
         <button class="modal-btn-web hide" id="mWebBtn" onclick="openWeb()">🔗</button>
       </div>
       <button class="visit-btn" id="visitBtn">다녀왔어요</button>
+      <div class="visit-cheer" id="visitCheer" style="display:none"></div>
     </div>
     <div class="modal-body">
       <div class="modal-section" id="mAddrSec">
@@ -1428,60 +1434,29 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
     }
   }
 
-  /* 공원갈까 — 공원 전국 순위 (Firebase Realtime DB)
-   공원별 방문수 기준 전국/지역 랭킹. 자동 집계. San 검증 방식(REST fetch). */
-var GONGO_FB_URL = 'https://sandol-13f4e-default-rtdb.asia-southeast1.firebasedatabase.app';
-var GONGO_PARK_PATH = 'gongo_park_rank';
-function gongoFbOn(){ return GONGO_FB_URL && GONGO_FB_URL.indexOf('https://')===0; }
-function gongoParkKey(name, dong){
-  var raw=(name||'')+'_'+(dong||'');
-  return raw.replace(/[.#$\/\[\]]/g,'_').slice(0,120);
-}
-function pushParkRank(park, dong){
-  if(!gongoFbOn() || !park) return;
-  try{
-    var key=gongoParkKey(park, dong);
-    fetch(GONGO_FB_URL+'/'+GONGO_PARK_PATH+'/'+key+'.json')
-      .then(function(r){ return r.ok?r.json():null; })
-      .then(function(cur){
-        var next = (cur && typeof cur.count==='number') ? cur.count+1 : 1;
-        fetch(GONGO_FB_URL+'/'+GONGO_PARK_PATH+'/'+key+'.json',{
-          method:'PATCH', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ name:park, region:dong||'', count:next, ts:Date.now() })
-        }).catch(function(){});
-      }).catch(function(){});
-  }catch(e){}
-}
-function fetchParkRank(park, dong, cb){
-  if(!gongoFbOn()){ cb(null); return; }
-  var key=gongoParkKey(park, dong);
-  fetch(GONGO_FB_URL+'/'+GONGO_PARK_PATH+'.json')
-    .then(function(r){ return r.ok?r.json():null; })
-    .then(function(data){
-      if(!data){ cb(null); return; }
-      var arr=[];
-      for(var k in data){ if(data[k]&&typeof data[k].count==='number') arr.push({key:k,region:data[k].region,count:data[k].count}); }
-      arr.sort(function(a,b){ return b.count-a.count; });
-      var natRank=arr.findIndex(function(x){return x.key===key;})+1;
-      if(natRank===0){ cb(null); return; }
-      var regionArr=arr.filter(function(x){return x.region===(dong||'');});
-      var regRank=regionArr.findIndex(function(x){return x.key===key;})+1;
-      cb({ natRank:natRank, natTotal:arr.length, regRank:regRank, regTotal:regionArr.length, region:dong, count:(data[key]?data[key].count:0) });
-    }).catch(function(){ cb(null); });
-}
-
-
+  var INTRO_MSGS=["오늘도 나오셨네요 🌿","가볍게 한 바퀴 걸어볼까요 🚶","오늘 날씨, 산책하기 좋아요 🌤️","천천히 걸으며 시작해요 🍃","오늘도 나를 위한 한 걸음 🌱","잠깐 나가서 바람 쐬어요 🌾","오늘도 건강하게, 반가워요 💚","가까운 공원 한 바퀴 어때요 🌳","오늘의 산책, 함께해요 🐾","몸도 마음도 가볍게 🍀","오늘도 좋은 하루 만들어요 ☀️","산책하기 딱 좋은 날이에요 🌸","천천히, 나의 속도로 걸어요 🌿","오늘도 한 걸음 내디뎌봐요 🌱","바깥 공기가 기다려요 🌾","오늘도 나와 줘서 반가워요 💛","가볍게 걷고 오면 개운해요 🍃","오늘도 건강 챙기는 하루 💪","잠깐의 산책이 하루를 바꿔요 🌳","오늘도 나를 아끼는 시간 💚"];
+  var PRAISE_MSGS=["오늘도 한 걸음 🌱","몸이 고마워할 거예요 💚","잘하셨어요, 오늘의 나 👏","오늘도 나를 위한 시간 🍃","한 걸음이 건강이 돼요 🌿","오늘도 걸으셨네요, 멋져요 ✨","몸도 마음도 가벼워졌죠 🌤️","이렇게 하루하루가 쌓여요 🌳","오늘도 나와 줘서 고마워요 💛","작은 걸음, 큰 건강 🚶","오늘의 산책, 참 잘했어요 🌸","꾸준함이 제일 어려운데 대단해요 🙌","오늘도 나를 아꼈어요 💚","발걸음마다 건강이 따라와요 🌿","오늘도 좋은 하루 만드셨네요 ☀️","몸이 튼튼해지고 있어요 💪","오늘도 걸은 나, 칭찬해요 🌱","이 습관이 나를 지켜줘요 🛡️","오늘도 한 뼘 더 건강해졌어요 🌷","내일도 이 길에서 만나요 🌾"];
+var BACK_MSGS=["다시 오셨네요, 반가워요 😊","오늘부터 또 시작이에요 🌱","괜찮아요, 다시 걸으면 돼요 💚","기다렸어요, 잘 오셨어요 🍃","쉬어도 괜찮아요, 다시 한 걸음 🌿","오랜만이에요, 반가운 발걸음 🌸","다시 나와 줘서 고마워요 💛","언제든 다시 시작할 수 있어요 ✨","오늘의 한 걸음이 새로운 시작 🌳","돌아오셨네요, 참 잘했어요 🙌","멈춰도 괜찮아요, 다시 가면 돼요 🌤️","그동안도 수고했어요, 다시 시작해요 💚","반가워요, 오늘부터 또 함께 🚶","쉼도 산책의 일부예요, 어서 와요 🍀","다시 걷는 오늘이 가장 빨라요 🌱","잘 돌아오셨어요, 천천히 가요 🌷","오늘 다시 나온 게 제일 멋져요 ⭐","괜찮아요, 오늘이 다시 첫날이에요 🌾","다시 만나서 기뻐요 😊","느려도 괜찮아요, 다시 시작이 중요해요 💛","무리하지 말고 천천히 걸어요 🍃","몸 살펴가며, 건강이 제일이에요 💚","쉬엄쉬엄, 무리는 금물이에요 🌿","몸이 먼저예요, 천천히 나오세요 🌱","건강 잘 챙기시고, 오늘도 한 걸음 💛"];
+  // gap(며칠만에 왔나) 보고 칭찬/위로 문구 선택
+  function pickStampMsg(gap){
+    var arr=(gap&&gap>=3)?BACK_MSGS:PRAISE_MSGS;
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
   function stampVisit(){
     if(typeof modalPark==='undefined'||!modalPark)return;
     var today=dateKey(new Date()), days=loadDays();
     var first=!(days[today]&&!days[today].forgiven);
     if(first){
       days[today]={ts:Date.now(),visited:modalPark.name,plat:modalPark.lat,plng:modalPark.lng,paddr:modalPark.addr,mood:null,note:'',wcode:null,emoji:'\u{1F463}',temp:null,dong:'',forgiven:false};
-      var st=loadStreak(); var msg=updateStreak(st,today,days);
+      var st=loadStreak();
+      var _prevStamp=st.lastStampDate;
+      var _gap=_prevStamp?diffDays(_prevStamp,today):0;
+      var msg=updateStreak(st,today,days);
       saveDays(days);saveStreak(st);
       fetchVisitMeta(today);
-      if(typeof pushParkRank==='function') pushParkRank(modalPark.name, modalPark.dong||days[today].dong||'');
-      showToast(msg||(modalPark.name+' \u2014 다녀왔어요! \u{1F43E}'));
+      var cheerMsg=msg||pickStampMsg(_gap);
+      var vc=document.getElementById('visitCheer');
+      if(vc){ vc.textContent=cheerMsg; vc.style.display='block'; }
     }else{
       days[today].visited=modalPark.name;
       days[today].plat=modalPark.lat; days[today].plng=modalPark.lng; days[today].paddr=modalPark.addr;
@@ -1498,6 +1473,8 @@ function fetchParkRank(park, dong, cb){
     var v=days[today]&&!days[today].forgiven;
     if(v){b.classList.add('done');b.innerHTML='\u2705 오늘 다녀왔어요';}
     else{b.classList.remove('done');b.innerHTML=pawSVG('#ffffff',18)+' 다녀왔어요';}
+    var vc=document.getElementById('visitCheer');
+    if(vc){ vc.style.display='none'; vc.textContent=''; }  // 카드 열 때 문구 초기화(도장 찍으면 다시 표시)
   }
 
   function countMonth(off){
@@ -1696,7 +1673,8 @@ var _calY=null, _calM=null;
     renderGrowth();
     renderSummary();
     var now=new Date();
-    renderCalendar();
+    
+  renderCalendar();
     var prev=countMonth(-1),nowN=countMonth(0);
     var dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
     document.getElementById('rcProg').style.width=Math.round(nowN/dim*100)+'%';
@@ -1775,18 +1753,12 @@ var _calY=null, _calM=null;
     if(rec.emoji&&rec.emoji!=='\u{1F463}')meta.push(rec.emoji+' '+wxText(rec.wcode));
     if(rec.dong)meta.push(rec.dong);
     if(rec.temp!=null)meta.push(rec.temp+'\u00B0');
-    var CHEER=['오늘도 수고했어요 \u{1F44F}','매일매일 건강 챙기네요 \u{1F33F}','잘 걸었어요, 멋져요 \u{1F44D}','몸도 마음도 가벼워졌겠어요 \u{1F343}','꾸준함이 최고예요 \u{1F44F}','오늘 산책 참 잘했어요 \u{1F60A}','한 걸음씩 건강해지고 있어요 \u{1F463}','스스로를 잘 돌봤어요 \u{1F495}'];
+    var CHEER=["오늘도 한 걸음 🌱","몸이 고마워할 거예요 💚","잘하셨어요, 오늘의 나 👏","오늘도 나를 위한 시간 🍃","한 걸음이 건강이 돼요 🌿","오늘도 걸으셨네요, 멋져요 ✨","몸도 마음도 가벼워졌죠 🌤️","이렇게 하루하루가 쌓여요 🌳","오늘도 나와 줘서 고마워요 💛","작은 걸음, 큰 건강 🚶","오늘의 산책, 참 잘했어요 🌸","꾸준함이 제일 어려운데 대단해요 🙌","오늘도 나를 아꼈어요 💚","발걸음마다 건강이 따라와요 🌿","오늘도 좋은 하루 만드셨네요 ☀️","몸이 튼튼해지고 있어요 💪","오늘도 걸은 나, 칭찬해요 🌱","이 습관이 나를 지켜줘요 🛡️","오늘도 한 뼘 더 건강해졌어요 🌷","내일도 이 길에서 만나요 🌾"];
     meta.push('<span class="d-cheer">'+CHEER[(d.getDate())%CHEER.length]+'</span>');
     var h='<div class="d-date">'+(d.getMonth()+1)+'월 '+d.getDate()+'일 '+dn+'요일</div>';
-    if(rec.visited)h+='<div class="d-park"><span class="d-park-name">\u{1F33F} '+String(rec.visited).replace(/</g,'&lt;')+'</span><span class="d-park-rank" id="dParkRank"></span></div>';
+    if(rec.visited)h+='<div class="d-park">\u{1F33F} '+String(rec.visited).replace(/</g,'&lt;')+'</div>';
     h+='<div class="d-meta">'+meta.join(' \u00B7 ')+'</div>';
     box.innerHTML=h;box.style.display='block';
-    if(rec.visited && typeof fetchParkRank==='function'){
-      fetchParkRank(rec.visited, rec.dong||'', function(r){
-        var el=document.getElementById('dParkRank');
-        if(el && r){ el.textContent='전국 '+r.natRank+'위'; }
-      });
-    }
   }
   function shareRecordVisit(){
     var st=loadStreak(),today=dateKey(new Date());
