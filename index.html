@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.53
-  - 홈 헤더 시간대별 문구 아래에 "오늘 산책하기 좋은 시간" 리본 그래프 추가
-  - Open-Meteo 시간별 체감온도(apparent_temperature)로 색·라벨 계산
-    <=28 좋음(초록) / 28~33 보통(노랑) / 33~35 더움(빨강) / >=35 위험(진빨강)
-    강수확률>=60% → 비(파랑) 거부권 / 지금 시각 ▲ 마커
-  - 라벨: 06·09·12·17·19·21 (저녁대 촘촘) · 리본 5~22시
-  - TODO(겨울): 추위 대칭 기준 미정. 현재는 여름 더위 기준만 적용됨.
+  공원갈까 v6.57
+  - 그래프 카드: 우측 상단에 범례(좋음/보통/나쁨) 추가, 글씨 작게
+  - 카드 바탕색 = 홈 배경색(#F5F0E8), 테두리/라운드 = '가장 가까운 공원' 카드와 동일(2px #D4621A / 20px)
+  - 색: 완만 #22D3EE / 보통 #FB923C / 가파름 #DC2626 (등산앱 소스값)
 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.53</title>
+<title>공원갈까 v6.57</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -199,17 +196,20 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .h-desc{font-size:11px;color:#2C1810;margin-top:4px;letter-spacing:.2px;font-weight:800;position:relative;z-index:2;text-shadow:0 1px 2px rgba(255,255,255,.45)}
 .h-weather{font-size:10px;color:#2C1810;font-weight:800;background:#fff;height:26px;line-height:22px;padding:0 11px;border-radius:999px;display:inline-flex;align-items:center;white-space:nowrap;position:relative;z-index:3;border:2px solid #2C1810;box-shadow:2px 2px 0 #2C1810}
 /* 시간대별 산책 리본 그래프 (v6.53) */
-.timebar{margin:10px 16px 0;background:#fff;border-radius:16px;padding:13px 15px 15px;box-shadow:0 2px 12px rgba(61,35,20,.07);display:none}
-.tb-title{font-size:13px;font-weight:800;color:#2C1810;margin-bottom:11px;display:flex;align-items:center;gap:6px}
-.tb-ribbonwrap{position:relative;padding-top:22px}
-.tb-ribbon{display:flex;height:15px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.03)}
+.timebar{margin:10px 16px 0;background:var(--paper);border:2px solid #D4621A;border-radius:20px;padding:11px 14px 12px;display:none}
+.tb-title{font-size:13px;font-weight:800;color:#2C1810;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.tb-leg{display:flex;gap:7px;font-size:10px;font-weight:700;color:var(--sub)}
+.tb-leg>span{display:inline-flex;align-items:center;gap:3px}
+.tb-leg i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.tb-ribbonwrap{position:relative;padding-top:17px;padding-bottom:11px}
+.tb-ribbon{display:flex;height:13px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.03)}
 .tb-seg{flex:1}
-.tb-nowline{position:absolute;top:22px;width:3px;height:15px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.2);transform:translateX(-50%);border-radius:2px}
-.tb-nowtri{position:absolute;top:7px;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #2C1810}
-.tb-nowtxt{position:absolute;top:-3px;transform:translateX(-50%);font-size:10px;font-weight:800;color:#2C1810;white-space:nowrap}
-.tb-timerow{position:relative;height:16px;margin-top:7px}
+.tb-nowline{position:absolute;top:17px;width:3px;height:13px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.2);transform:translateX(-50%);border-radius:2px}
+.tb-nowtri{position:absolute;top:32px;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid #2C1810}
+.tb-nowtxt{position:absolute;top:0;transform:translateX(-50%);font-size:10px;font-weight:800;color:#2C1810;white-space:nowrap}
+.tb-timerow{position:relative;height:15px;margin-top:5px}
 .tb-lab{position:absolute;transform:translateX(-50%);font-size:11px;font-weight:700;color:#A0876A}
-.tb-summary{margin-top:12px;font-size:13px;font-weight:800;line-height:1.4}
+.tb-summary{margin-top:9px;font-size:13px;font-weight:800;line-height:1.35}
 .gps-btn{background:#fff;border:2px solid #2C1810;padding:4px 9px;color:#2C1810;font-size:9.5px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:4px;letter-spacing:.2px;border-radius:16px;box-shadow:2px 2px 0 #2C1810;position:relative;z-index:3}
 .gps-dot{width:7px;height:7px;background:#E8202A;border-radius:50%;flex-shrink:0}
 .gps-dot.s{background:#E8202A;animation:blink .8s infinite}
@@ -508,10 +508,8 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   </div>
   <div class="h-rule"></div>
 </div>
-<div class="time-tip" id="timeTip">☀️ 오늘도 동네 산책 즐겁게</div>
-
 <div class="timebar" id="timeBar">
-  <div class="tb-title">🌳 오늘 산책하기 좋은 시간</div>
+  <div class="tb-title"><span>🌳 오늘 산책하기 좋은 시간</span><span class="tb-leg"><span><i style="background:#22D3EE"></i>좋음</span><span><i style="background:#FB923C"></i>보통</span><span><i style="background:#DC2626"></i>나쁨</span></span></div>
   <div class="tb-ribbonwrap">
     <div class="tb-ribbon" id="tbRibbon"></div>
     <div class="tb-nowline" id="tbNowLine"></div>
@@ -897,7 +895,7 @@ function fetchWeather(_try){
   }).catch(function(){
     if(_try<3){ setTimeout(function(){ fetchWeather(_try+1); }, 2000); }  // 실패 시 2초 뒤 재시도(최대 3회)
   });
-  if(_try===0){ fetchTimeTip(); fetchTimeGraph(); }
+  if(_try===0){ fetchTimeGraph(); }
 }
 // 일출·일몰 받아서 시간대별 산책 문구 (거짓 없는 실제 천문 데이터)
 function fetchTimeTip(_try){
@@ -939,14 +937,15 @@ function fetchTimeTip(_try){
 var TB_START=5, TB_END=22;                 // 새벽5시 ~ 밤10시
 var TB_LABELS=[6,9,12,17,19,21];           // 저녁대(17·19·21) 촘촘
 function tbScore(at, pop){
-  // 강수확률 60%↑ → 비(거부권)
-  if(pop>=60) return {c:'#3B82F6', key:'rain'};
-  // 체감온도 기준(여름) · 33/35도는 폭염주의보/경보 체감기준
-  if(at>=35)  return {c:'#991B1B', key:'danger'};   // 위험·자제
-  if(at>=33)  return {c:'#EF4444', key:'hot'};      // 더움
-  if(at>=28)  return {c:'#F59E0B', key:'ok'};       // 보통
-  return {c:'#16A34A', key:'good'};                 // 좋음
-  // TODO(겨울): 추위 대칭 기준 미정 — 현재는 여름 더위 기준만 적용
+  // 등산앱(mt100) 소스 실제값: 완만 #22D3EE / 보통 #FB923C / 가파름 #DC2626
+  if(pop>=60) return {c:'#DC2626', key:'rain'};   // 비
+  if(at>=35)  return {c:'#DC2626', key:'heat'};   // 폭염 위험
+  if(at>=33)  return {c:'#DC2626', key:'hot'};    // 더움
+  if(at>=28)  return {c:'#FB923C', key:'ok'};     // 보통(더운쪽)
+  if(at>=10)  return {c:'#22D3EE', key:'good'};   // 좋음
+  if(at>=0)   return {c:'#FB923C', key:'ok'};     // 보통(추운쪽)
+  if(at>=-12) return {c:'#DC2626', key:'cold'};   // 추움
+  return {c:'#DC2626', key:'chill'};              // 한파 위험
 }
 function tbNowHour(){
   var h=new Date().getHours();
@@ -1001,21 +1000,32 @@ function fetchTimeGraph(_try){
       el.textContent=(lh<10?'0'+lh:lh)+'H';
       tr.appendChild(el);
     });
-    // 요약문 (지금 상태 + 가장 좋은 시간대)
+    // 요약문 (지금 상태 + 다음 좋은 시간대)
     var nowS=scores[Math.max(0, nh-TB_START)]||scores[scores.length-1];
     var goods=[]; scores.forEach(function(s,i){ if(s.key==='good') goods.push(hours[i]); });
-    function best(){
-      if(!goods.length) return '';
-      var after=goods.filter(function(x){return x>nh;});
-      if(after.length){ var s=after[0]; return s>=18?('저녁 '+s+'시 이후 추천'):(s+'시 이후가 선선해요'); }
-      return '내일 새벽·아침이 좋아요';
+    var nextGood=null;
+    for(var gi=0; gi<goods.length; gi++){ if(goods[gi]>nh){ nextGood=goods[gi]; break; } }
+    var coldSide=(nowS.key==='cold'||nowS.key==='chill');
+    function hint(){
+      if(nextGood!=null){
+        if(coldSide) return (nextGood>=11&&nextGood<=15)?('낮 '+nextGood+'시쯤 따뜻해져요'):(nextGood+'시 이후가 나아요');
+        return nextGood>=18?('저녁 '+nextGood+'시 이후 추천'):(nextGood+'시 이후가 선선해요');
+      }
+      if(coldSide) return '낮에도 쌀쌀해요 · 따뜻하게 입으세요';
+      if(nowS.key==='hot'||nowS.key==='heat') return '내일 새벽·아침이 좋아요';
+      return '';
     }
     var emoji, main, sub='', col;
-    if(nowS.key==='good'){ emoji='🌿'; main='지금 나가기 좋아요'; sub='선선할 때 다녀오세요'; col='#166534'; }
-    else if(nowS.key==='ok'){ emoji='🚶'; main='지금 나가도 괜찮아요'; sub=best(); col='#92400E'; }
-    else if(nowS.key==='hot'){ emoji='🥵'; main='지금은 좀 더워요'; sub=best(); col='#991B1B'; }
-    else if(nowS.key==='danger'){ emoji='⚠️'; main='지금은 나가지 마세요'; sub='한낮 폭염 · '+best(); col='#7F1D1D'; }
-    else { emoji='☔'; main='지금은 비 소식이 있어요'; sub=best(); col='#1E40AF'; }
+    switch(nowS.key){
+      case 'good':  emoji='🌿'; main='지금 나가기 좋아요'; sub='지금이 딱이에요'; col='#166534'; break;
+      case 'ok':    emoji='🚶'; main='지금 나가도 괜찮아요'; sub=hint(); col='#92400E'; break;
+      case 'hot':   emoji='🥵'; main='지금은 좀 더워요'; sub=hint(); col='#991B1B'; break;
+      case 'heat':  emoji='⚠️'; main='지금은 나가지 마세요'; sub='한낮 폭염'; col='#7F1D1D'; break;
+      case 'cold':  emoji='🧣'; main='지금은 좀 추워요'; sub=hint(); col='#0E7490'; break;
+      case 'chill': emoji='⚠️'; main='지금은 나가지 마세요'; sub='한파 주의'; col='#155E75'; break;
+      default:      emoji='☔'; main='지금은 비 소식이 있어요'; sub=hint(); col='#1E40AF';
+    }
+    if(nowS.key==='heat'||nowS.key==='chill'){ var hh2=hint(); if(hh2) sub=sub+' · '+hh2; }
     var sm=document.getElementById('tbSummary');
     sm.style.color=col;
     sm.textContent=emoji+' '+main+(sub?(' · '+sub):'');
