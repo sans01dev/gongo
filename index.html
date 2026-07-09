@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.58
-  - 시간대 그래프: '오늘 온도 대비(상대)' 방식으로 변경
-    오늘 하루 체감온도 중 제일 쾌적한 때 → 청록(좋음), 제일 나쁜 때 → 빨강(나쁨), 중간 → 주황(보통)
-    쾌적 벌점(15~23° 기준)을 하루 min~max로 정규화 → 무더운 날도 '언제가 나은지' 대비가 항상 보임
-  - 절대 위험은 상대 무시하고 빨강 유지: 폭염>=35 / 한파<=-12 / 강수>=60% 비
-  - 색: 청록 #22D3EE / 주황 #FB923C / 빨강 #DC2626 (등산앱 소스값)
+  공원갈까 v6.61
+  - 요약문 우측에 날씨 특보 배지 추가 (해당될 때만):
+    폭염경보(체감>=35)/주의보(>=33), 한파경보(<=-15)/주의보(<=-12),
+    호우경보(시간당>=20mm)/주의보(>=10mm), 미세먼지 나쁨/매우나쁨(대기질 API)
+  - 기준은 기상청 특보 기준에 맞춤
 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.58</title>
+<title>공원갈까 v6.61</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -198,20 +197,22 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .h-desc{font-size:11px;color:#2C1810;margin-top:4px;letter-spacing:.2px;font-weight:800;position:relative;z-index:2;text-shadow:0 1px 2px rgba(255,255,255,.45)}
 .h-weather{font-size:10px;color:#2C1810;font-weight:800;background:#fff;height:26px;line-height:22px;padding:0 11px;border-radius:999px;display:inline-flex;align-items:center;white-space:nowrap;position:relative;z-index:3;border:2px solid #2C1810;box-shadow:2px 2px 0 #2C1810}
 /* 시간대별 산책 리본 그래프 (v6.53) */
-.timebar{margin:10px 16px 0;background:var(--paper);border:2px solid #D4621A;border-radius:20px;padding:11px 14px 12px;display:none}
-.tb-title{font-size:13px;font-weight:800;color:#2C1810;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.timebar{margin:10px 16px 0;background:var(--paper);border:2px solid #D4621A;border-radius:20px;padding:9px 13px 10px;display:none}
+.tb-title{font-size:13px;font-weight:800;color:#2C1810;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
 .tb-leg{display:flex;gap:7px;font-size:10px;font-weight:700;color:var(--sub)}
 .tb-leg>span{display:inline-flex;align-items:center;gap:3px}
 .tb-leg i{width:9px;height:9px;border-radius:3px;display:inline-block}
-.tb-ribbonwrap{position:relative;padding-top:17px;padding-bottom:11px}
-.tb-ribbon{display:flex;height:13px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.03)}
+.tb-ribbonwrap{position:relative;padding-top:15px;padding-bottom:9px}
+.tb-ribbon{display:flex;height:12px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.03)}
 .tb-seg{flex:1}
-.tb-nowline{position:absolute;top:17px;width:3px;height:13px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.2);transform:translateX(-50%);border-radius:2px}
-.tb-nowtri{position:absolute;top:32px;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid #2C1810}
+.tb-nowline{position:absolute;top:15px;width:3px;height:12px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.2);transform:translateX(-50%);border-radius:2px}
+.tb-nowtri{position:absolute;top:28px;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid #2C1810}
 .tb-nowtxt{position:absolute;top:0;transform:translateX(-50%);font-size:10px;font-weight:800;color:#2C1810;white-space:nowrap}
-.tb-timerow{position:relative;height:15px;margin-top:5px}
+.tb-timerow{position:relative;height:14px;margin-top:4px}
 .tb-lab{position:absolute;transform:translateX(-50%);font-size:11px;font-weight:700;color:#A0876A}
-.tb-summary{margin-top:9px;font-size:13px;font-weight:800;line-height:1.35}
+.tb-summary{margin-top:7px;font-size:13px;font-weight:800;line-height:1.35;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+#tbSumTxt{flex:1;min-width:0}
+.tb-alert{flex-shrink:0;display:none;align-items:center;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;white-space:nowrap;line-height:1.5}
 .gps-btn{background:#fff;border:2px solid #2C1810;padding:4px 9px;color:#2C1810;font-size:9.5px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:4px;letter-spacing:.2px;border-radius:16px;box-shadow:2px 2px 0 #2C1810;position:relative;z-index:3}
 .gps-dot{width:7px;height:7px;background:#E8202A;border-radius:50%;flex-shrink:0}
 .gps-dot.s{background:#E8202A;animation:blink .8s infinite}
@@ -519,7 +520,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
     <div class="tb-nowtxt" id="tbNowTxt">지금</div>
   </div>
   <div class="tb-timerow" id="tbTimeRow"></div>
-  <div class="tb-summary" id="tbSummary"></div>
+  <div class="tb-summary"><span id="tbSumTxt"></span><span class="tb-alert" id="tbAlert"></span></div>
 </div>
 
 <div class="tab-wrap">
@@ -937,7 +938,7 @@ function fetchTimeTip(_try){
 }
 // ─── 오늘 산책하기 좋은 시간 리본 (Open-Meteo 시간별 체감온도) ───
 var TB_START=5, TB_END=22;                 // 새벽5시 ~ 밤10시
-var TB_LABELS=[6,9,12,17,19,21];           // 저녁대(17·19·21) 촘촘
+var TB_LABELS=[9,12,17,19];           // 저녁대 촘촘 (06·21 제거)
 function tbPenalty(at){
   // 쾌적대(체감 15~23°)에서 벗어난 정도 — 여름·겨울 공통. 더울수록/추울수록 커짐
   if(at<15) return 15-at;
@@ -950,11 +951,23 @@ function tbNowHour(){
   if(h>TB_END) return TB_END;
   return h;
 }
+// 미세먼지(PM10/PM2.5) — Open-Meteo 대기질 API
+function fetchAir(cb){
+  if(!myLat) return;
+  var u='https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+myLat+'&longitude='+myLng+
+        '&hourly=pm10,pm2_5&timezone=auto&forecast_days=1';
+  fetch(u).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.hourly||!d.hourly.pm10) return;
+    var hh=new Date().getHours(), idx=0;
+    if(d.hourly.time){ for(var k=0;k<d.hourly.time.length;k++){ if(parseInt(String(d.hourly.time[k]).slice(11,13),10)===hh){ idx=k; break; } } }
+    cb(d.hourly.pm10[idx]||0, (d.hourly.pm2_5||[])[idx]||0);
+  }).catch(function(){});
+}
 function fetchTimeGraph(_try){
   if(!myLat) return;
   _try=_try||0;
   var url='https://api.open-meteo.com/v1/forecast?latitude='+myLat+'&longitude='+myLng+
-          '&hourly=apparent_temperature,precipitation_probability&timezone=auto&forecast_days=1';
+          '&hourly=apparent_temperature,precipitation_probability,precipitation&timezone=auto&forecast_days=1';
   fetch(url).then(function(r){return r.json();}).then(function(d){
     if(!d||!d.hourly||!d.hourly.time||!d.hourly.apparent_temperature) throw new Error('no hourly');
     // 시각별 인덱스 매핑 (안전하게 time 문자열의 시(hour)로)
@@ -976,15 +989,21 @@ function fetchTimeGraph(_try){
     // 오늘 온도 대비(상대): 쾌적 벌점을 하루 min~max로 정규화
     var pens=ats.map(tbPenalty);
     var pmin=Math.min.apply(null,pens), pmax=Math.max.apply(null,pens), span=pmax-pmin;
-    var CY='#22D3EE', OR='#FB923C', RD='#DC2626';
+    var RD='#DC2626';
+    // 청록(0) → 주황(0.5) → 빨강(1) 연속 그라데이션
+    function tbLerp(a,b,t){ return Math.round(a+(b-a)*t); }
+    function tbGrad(nn){
+      var C=[0x22,0xD3,0xEE], O=[0xFB,0x92,0x3C], R=[0xDC,0x26,0x26], x,y,t;
+      if(nn<=0.5){ x=C; y=O; t=nn/0.5; } else { x=O; y=R; t=(nn-0.5)/0.5; }
+      return 'rgb('+tbLerp(x[0],y[0],t)+','+tbLerp(x[1],y[1],t)+','+tbLerp(x[2],y[2],t)+')';
+    }
     var scores=ats.map(function(at,i){
-      if(pps[i]>=60) return {c:RD, key:'rain'};    // 비(절대)
-      if(at>=35)     return {c:RD, key:'heat'};     // 폭염(절대)
-      if(at<=-12)    return {c:RD, key:'chill'};    // 한파(절대)
-      var nn = span<0.5 ? (pens[i]>0?0.6:0) : (pens[i]-pmin)/span;  // 0=제일 쾌적, 1=제일 나쁨
-      if(nn<=0.34) return {c:CY, key:'good'};
-      if(nn<=0.67) return {c:OR, key:'ok'};
-      return {c:RD, key:'bad'};
+      if(pps[i]>=60) return {c:RD, key:'rain'};     // 비(절대)
+      if(at>=35)     return {c:RD, key:'heat'};      // 폭염(절대)
+      if(at<=-12)    return {c:RD, key:'chill'};     // 한파(절대)
+      var nn = span<0.5 ? (pens[i]>0?0.55:0) : (pens[i]-pmin)/span;  // 0=제일 쾌적, 1=제일 나쁨
+      var key = nn<=0.33?'good':(nn<=0.66?'ok':'bad');
+      return {c:tbGrad(nn), key:key};              // 색은 연속, 요약용 key는 3단계
     });
     // 오늘 제일 나은 시각(벌점 최소, 위험·비 제외)
     var bestH=null, bestP=Infinity;
@@ -1027,9 +1046,34 @@ function fetchTimeGraph(_try){
       case 'chill': emoji='⚠️'; main='지금은 한파예요'; sub='나가지 마세요'+(hint()?(' · '+hint()):''); col='#7F1D1D'; break;
       default:      emoji='☔'; main='지금은 비 소식이 있어요'; sub=hint(); col='#1E40AF';
     }
-    var sm=document.getElementById('tbSummary');
-    sm.style.color=col;
-    sm.textContent=emoji+' '+main+(sub?(' · '+sub):'');
+    var st=document.getElementById('tbSumTxt');
+    st.style.color=col;
+    st.textContent=emoji+' '+main+(sub?(' · '+sub):'');
+
+    // ── 날씨 특보 배지 (해당될 때만) ──
+    var tmax=Math.max.apply(null,ats), tmin=Math.min.apply(null,ats);
+    var maxRain=0;
+    if(d.hourly.precipitation){ hours.forEach(function(h){ var ix=byHour[h]; var v=d.hourly.precipitation[ix]; if(typeof v==='number'&&v>maxRain) maxRain=v; }); }
+    function setAlert(o){
+      var el=document.getElementById('tbAlert');
+      if(!o){ el.style.display='none'; el.textContent=''; return; }
+      el.style.display='inline-flex'; el.textContent=o.t; el.style.background=o.bg; el.style.color=o.fg;
+    }
+    var alertPrio=0, a=null;
+    if(tmax>=35){ a={t:'🥵 폭염경보',bg:'#FEE2E2',fg:'#B91C1C'}; alertPrio=5; }
+    else if(tmin<=-15){ a={t:'🥶 한파경보',bg:'#DBEAFE',fg:'#1D4ED8'}; alertPrio=5; }
+    else if(maxRain>=20){ a={t:'🌊 호우경보',bg:'#DBEAFE',fg:'#1D4ED8'}; alertPrio=5; }
+    else if(tmax>=33){ a={t:'🥵 폭염주의보',bg:'#FFEDD5',fg:'#C2410C'}; alertPrio=3; }
+    else if(tmin<=-12){ a={t:'🥶 한파주의보',bg:'#DBEAFE',fg:'#1D4ED8'}; alertPrio=3; }
+    else if(maxRain>=10){ a={t:'☔ 호우주의보',bg:'#DBEAFE',fg:'#1D4ED8'}; alertPrio=3; }
+    setAlert(a);
+    // 미세먼지 — 별도 API, 더 심하면 교체
+    fetchAir(function(pm10,pm25){
+      var o2=null,p2=0;
+      if(pm25>=76||pm10>=151){ o2={t:'😷 미세먼지 매우나쁨',bg:'#F3F4F6',fg:'#374151'}; p2=4; }
+      else if(pm25>=36||pm10>=81){ o2={t:'😷 미세먼지 나쁨',bg:'#F3F4F6',fg:'#4B5563'}; p2=2; }
+      if(o2 && p2>alertPrio) setAlert(o2);
+    });
 
     document.getElementById('timeBar').style.display='block';
   }).catch(function(){
