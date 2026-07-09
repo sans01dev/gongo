@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.61
-  - 요약문 우측에 날씨 특보 배지 추가 (해당될 때만):
-    폭염경보(체감>=35)/주의보(>=33), 한파경보(<=-15)/주의보(<=-12),
-    호우경보(시간당>=20mm)/주의보(>=10mm), 미세먼지 나쁨/매우나쁨(대기질 API)
-  - 기준은 기상청 특보 기준에 맞춤
+  공원갈까 v6.63
+  - 인트로 문구(.lo-hope): 크기 20px, 굵기 500, 위·아래 여백 10px
 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.61</title>
+<title>공원갈까 v6.63</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -134,7 +131,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 }
 .lo-box-text em{color:#FF6B35;font-style:normal}
 .lo-box-text strong{color:#3DC9B0}
-.lo-hope{margin:-14px auto 18px;font-size:13px;font-weight:700;color:#7A6A55;text-align:center;letter-spacing:-.2px;animation:popIn .5s cubic-bezier(.34,1.56,.64,1) .3s both}
+.lo-hope{margin:10px auto 10px;font-size:20px;font-weight:500;color:#FFFFFF;text-align:center;letter-spacing:-.2px;text-shadow:0 1px 2px rgba(0,0,0,.12);animation:popIn .5s cubic-bezier(.34,1.56,.64,1) .3s both}
 .lo-feats{display:flex;gap:7px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;animation:popIn .5s cubic-bezier(.34,1.56,.64,1) .36s both}
 .lo-feat{background:rgba(255,255,255,.9);border:2px solid #2C1810;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:800;color:#2C1810;box-shadow:2px 2px 0 #2C1810}
 
