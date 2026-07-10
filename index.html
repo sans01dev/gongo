@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.64
-  - 시간 라벨에서 09H 제거 (12·17·19만)
-  - 시간 그래프 카드: 위치 여부와 무관하게 항상 표시
-    위치 잡히기 전 → 간단 안내문구 / 위치 잡히면 → 그래프·범례 표시
+  공원갈까 v6.65
+  - 시간 그래프: 시간 라벨(12·17·19) 전부 삭제, 라벨 줄 공간도 제거
 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.64</title>
+<title>공원갈까 v6.65</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -941,7 +939,7 @@ function fetchTimeTip(_try){
 }
 // ─── 오늘 산책하기 좋은 시간 리본 (Open-Meteo 시간별 체감온도) ───
 var TB_START=5, TB_END=22;                 // 새벽5시 ~ 밤10시
-var TB_LABELS=[12,17,19];           // 09H 제거
+var TB_LABELS=[];           // 시간 라벨 전부 제거
 function tbPenalty(at){
   // 쾌적대(체감 15~23°)에서 벗어난 정도 — 여름·겨울 공통. 더울수록/추울수록 커짐
   if(at<15) return 15-at;
@@ -1029,7 +1027,7 @@ function fetchTimeGraph(_try){
     document.getElementById('tbNowTri').style.left=pct+'%';
     document.getElementById('tbNowTxt').style.left=pct+'%';
     // 시간 라벨
-    var tr=document.getElementById('tbTimeRow'); tr.innerHTML='';
+    var tr=document.getElementById('tbTimeRow'); tr.innerHTML=''; tr.style.display=TB_LABELS.length?'block':'none';
     TB_LABELS.forEach(function(lh){
       var p=((lh-TB_START)+0.5)/n*100;
       var el=document.createElement('div');
