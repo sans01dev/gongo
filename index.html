@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.63
-  - 인트로 문구(.lo-hope): 크기 20px, 굵기 500, 위·아래 여백 10px
+  공원갈까 v6.64
+  - 시간 라벨에서 09H 제거 (12·17·19만)
+  - 시간 그래프 카드: 위치 여부와 무관하게 항상 표시
+    위치 잡히기 전 → 간단 안내문구 / 위치 잡히면 → 그래프·범례 표시
 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.63</title>
+<title>공원갈까 v6.64</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -194,7 +196,8 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .h-desc{font-size:11px;color:#2C1810;margin-top:4px;letter-spacing:.2px;font-weight:800;position:relative;z-index:2;text-shadow:0 1px 2px rgba(255,255,255,.45)}
 .h-weather{font-size:10px;color:#2C1810;font-weight:800;background:#fff;height:26px;line-height:22px;padding:0 11px;border-radius:999px;display:inline-flex;align-items:center;white-space:nowrap;position:relative;z-index:3;border:2px solid #2C1810;box-shadow:2px 2px 0 #2C1810}
 /* 시간대별 산책 리본 그래프 (v6.53) */
-.timebar{margin:10px 16px 0;background:var(--paper);border:2px solid #D4621A;border-radius:20px;padding:9px 13px 10px;display:none}
+.timebar{margin:10px 16px 0;background:var(--paper);border:2px solid #D4621A;border-radius:20px;padding:9px 13px 10px;display:block}
+.tb-ph{font-size:13px;font-weight:700;color:var(--sub);line-height:1.45;padding:6px 2px 4px}
 .tb-title{font-size:13px;font-weight:800;color:#2C1810;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
 .tb-leg{display:flex;gap:7px;font-size:10px;font-weight:700;color:var(--sub)}
 .tb-leg>span{display:inline-flex;align-items:center;gap:3px}
@@ -509,7 +512,9 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   <div class="h-rule"></div>
 </div>
 <div class="timebar" id="timeBar">
-  <div class="tb-title"><span>🌳 오늘 산책하기 좋은 시간</span><span class="tb-leg"><span><i style="background:#22D3EE"></i>좋음</span><span><i style="background:#FB923C"></i>보통</span><span><i style="background:#DC2626"></i>나쁨</span></span></div>
+  <div class="tb-title"><span>🌳 오늘 산책하기 좋은 시간</span><span class="tb-leg" id="tbLeg" style="display:none"><span><i style="background:#22D3EE"></i>좋음</span><span><i style="background:#FB923C"></i>보통</span><span><i style="background:#DC2626"></i>나쁨</span></span></div>
+  <div class="tb-ph" id="tbPh">📍 위치를 확인하면 오늘 걷기 좋은 시간을 알려드려요</div>
+  <div id="tbBody" style="display:none">
   <div class="tb-ribbonwrap">
     <div class="tb-ribbon" id="tbRibbon"></div>
     <div class="tb-nowline" id="tbNowLine"></div>
@@ -518,6 +523,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   </div>
   <div class="tb-timerow" id="tbTimeRow"></div>
   <div class="tb-summary"><span id="tbSumTxt"></span><span class="tb-alert" id="tbAlert"></span></div>
+  </div>
 </div>
 
 <div class="tab-wrap">
@@ -935,7 +941,7 @@ function fetchTimeTip(_try){
 }
 // ─── 오늘 산책하기 좋은 시간 리본 (Open-Meteo 시간별 체감온도) ───
 var TB_START=5, TB_END=22;                 // 새벽5시 ~ 밤10시
-var TB_LABELS=[9,12,17,19];           // 저녁대 촘촘 (06·21 제거)
+var TB_LABELS=[12,17,19];           // 09H 제거
 function tbPenalty(at){
   // 쾌적대(체감 15~23°)에서 벗어난 정도 — 여름·겨울 공통. 더울수록/추울수록 커짐
   if(at<15) return 15-at;
@@ -1072,7 +1078,9 @@ function fetchTimeGraph(_try){
       if(o2 && p2>alertPrio) setAlert(o2);
     });
 
-    document.getElementById('timeBar').style.display='block';
+    document.getElementById('tbPh').style.display='none';
+    document.getElementById('tbLeg').style.display='flex';
+    document.getElementById('tbBody').style.display='block';
   }).catch(function(){
     if(_try<3){ setTimeout(function(){ fetchTimeGraph(_try+1); }, 2000); }  // 실패 시 재시도(최대 3회)
   });
