@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.83
+  공원갈까 v6.85
+  - fetchTimeTip(시간대별 인사 문구) 함수 블록 주석 처리(삭제 대신 보류). 기능 변화 0
+  (구) v6.84
+  - 코드 정리: 미사용 중복 INTRO_MSGS 배열(fetchVisitMeta 안 죽은 복사본) 제거. 기능 변화 0
+  (구) v6.83
   - 열대야 배지 추가: 밤 최저 실제기온(temperature_2m) 25도↑ → 열대야(초승달+열기 SVG, 빨강)
     우선순위: 폭염경보 > 열대야 > 폭염주의보. temperature_2m 파라미터 추가
   (구) v6.82
@@ -39,7 +43,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.83</title>
+<title>공원갈까 v6.85</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -1005,6 +1009,7 @@ function fetchWeather(_try){
   if(_try===0){ fetchTimeGraph(); }
 }
 // 일출·일몰 받아서 시간대별 산책 문구 (거짓 없는 실제 천문 데이터)
+/* [보류] 시간대별 인사 문구 함수 — v6.56에서 비활성화. 나중에 재사용 예정이라 삭제 대신 주석 처리.
 function fetchTimeTip(_try){
   if(!myLat) return;
   _try=_try||0;
@@ -1040,6 +1045,7 @@ function fetchTimeTip(_try){
     if(_try<3){ setTimeout(function(){ fetchTimeTip(_try+1); }, 2000); }  // 실패 시 2초 뒤 재시도(최대 3회)
   });
 }
+*/
 // ─── 오늘 산책하기 좋은 시간 리본 (Open-Meteo 시간별 체감온도) ───
 var TB_START=5, TB_END=22;                 // 새벽5시 ~ 밤10시
 var TB_LABELS=[];           // 시간 라벨 전부 제거
@@ -1762,7 +1768,6 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
     }
   }
 
-  var INTRO_MSGS=["오늘도 나오셨네요 🌿","가볍게 한 바퀴 걸어볼까요 🚶","오늘 날씨, 산책하기 좋아요 🌤️","천천히 걸으며 시작해요 🍃","오늘도 나를 위한 한 걸음 🌱","잠깐 나가서 바람 쐬어요 🌾","오늘도 건강하게, 반가워요 💚","가까운 공원 한 바퀴 어때요 🌳","오늘의 산책, 함께해요 🐾","몸도 마음도 가볍게 🍀","오늘도 좋은 하루 만들어요 ☀️","산책하기 딱 좋은 날이에요 🌸","천천히, 나의 속도로 걸어요 🌿","오늘도 한 걸음 내디뎌봐요 🌱","바깥 공기가 기다려요 🌾","오늘도 나와 줘서 반가워요 💛","가볍게 걷고 오면 개운해요 🍃","오늘도 건강 챙기는 하루 💪","잠깐의 산책이 하루를 바꿔요 🌳","오늘도 나를 아끼는 시간 💚","실시간 자외선도 미리 확인해요 ☀️","실시간 자외선 UV 지수 제공<svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='currentColor' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round' style='vertical-align:-3px;margin-left:3px'><circle cx='12' cy='12' r='4.2'/><path d='M12 1.8v2.4M12 19.8v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M1.8 12h2.4M19.8 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7'/></svg>"];
   var PRAISE_MSGS=["오늘도 한 걸음 🌱","몸이 고마워할 거예요 💚","잘하셨어요, 오늘의 나 👏","오늘도 나를 위한 시간 🍃","한 걸음이 건강이 돼요 🌿","오늘도 걸으셨네요, 멋져요 ✨","몸도 마음도 가벼워졌죠 🌤️","이렇게 하루하루가 쌓여요 🌳","오늘도 나와 줘서 고마워요 💛","작은 걸음, 큰 건강 🚶","오늘의 산책, 참 잘했어요 🌸","꾸준함이 제일 어려운데 대단해요 🙌","오늘도 나를 아꼈어요 💚","발걸음마다 건강이 따라와요 🌿","오늘도 좋은 하루 만드셨네요 ☀️","몸이 튼튼해지고 있어요 💪","오늘도 걸은 나, 칭찬해요 🌱","이 습관이 나를 지켜줘요 🛡️","오늘도 한 뼘 더 건강해졌어요 🌷","내일도 이 길에서 만나요 🌾"];
 var BACK_MSGS=["다시 오셨네요, 반가워요 😊","오늘부터 또 시작이에요 🌱","괜찮아요, 다시 걸으면 돼요 💚","기다렸어요, 잘 오셨어요 🍃","쉬어도 괜찮아요, 다시 한 걸음 🌿","오랜만이에요, 반가운 발걸음 🌸","다시 나와 줘서 고마워요 💛","언제든 다시 시작할 수 있어요 ✨","오늘의 한 걸음이 새로운 시작 🌳","돌아오셨네요, 참 잘했어요 🙌","멈춰도 괜찮아요, 다시 가면 돼요 🌤️","그동안도 수고했어요, 다시 시작해요 💚","반가워요, 오늘부터 또 함께 🚶","쉼도 산책의 일부예요, 어서 와요 🍀","다시 걷는 오늘이 가장 빨라요 🌱","잘 돌아오셨어요, 천천히 가요 🌷","오늘 다시 나온 게 제일 멋져요 ⭐","괜찮아요, 오늘이 다시 첫날이에요 🌾","다시 만나서 기뻐요 😊","느려도 괜찮아요, 다시 시작이 중요해요 💛","무리하지 말고 천천히 걸어요 🍃","몸 살펴가며, 건강이 제일이에요 💚","쉬엄쉬엄, 무리는 금물이에요 🌿","몸이 먼저예요, 천천히 나오세요 🌱","건강 잘 챙기시고, 오늘도 한 걸음 💛"];
   // gap(며칠만에 왔나) 보고 칭찬/위로 문구 선택
