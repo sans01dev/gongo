@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.68
-  - 이용안내 탭 맨 위에 "산책 그래프 보는 법" 안내 추가
-    예시 리본(여름 U자) + 범례 + 지금 마커 + 특보 배지, 설명 5줄
+  공원갈까 v6.69
+  - 인트로 문구 위아래 간격 실제로 균일하게: 말풍선(.lo-box) margin-bottom 16→10
+    (margin 상쇄로 위가 16으로 보이던 문제 해결 → 위·아래 10px 동일)
 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.68</title>
+<title>공원갈까 v6.69</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -120,7 +120,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   display:inline-block;
   box-shadow:4px 4px 0 #2C1810;
   animation:popIn .5s cubic-bezier(.34,1.56,.64,1) .28s both;
-  margin-bottom:16px
+  margin-bottom:10px
 }
 @keyframes popIn{
   from{transform:scale(.6);opacity:0}
