@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.69
-  - 인트로 문구 위아래 간격 실제로 균일하게: 말풍선(.lo-box) margin-bottom 16→10
-    (margin 상쇄로 위가 16으로 보이던 문제 해결 → 위·아래 10px 동일)
+  공원갈까 v6.70
+  - 온도 그래프 밑에 자외선(UV) 지수 리본 추가 (Open-Meteo uv_index 실연동, 절반 높이)
+    등급색 낮음/보통/높음/매우높음/위험 · 지금 위치에 UV 값 표기 · 범례 3개(낮음·높음·위험)
+  - UV 경고 배지(노랑 계열 + 해 SVG): 강함(6+)/매우높음(8+)/위험(11+)
+  - 이용안내에 자외선 지수 설명 추가
 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.69</title>
+<title>공원갈까 v6.70</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -236,6 +238,16 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .tb-summary{margin-top:7px;font-size:13px;font-weight:800;line-height:1.35;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 #tbSumTxt{flex:1;min-width:0}
 .tb-alert{flex-shrink:0;display:none;align-items:center;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;white-space:nowrap;line-height:1.5}
+/* 자외선(UV) 섹션 (v6.70) */
+.tb-uvsec{margin-top:8px;padding-top:7px;border-top:1px solid var(--line)}
+.tb-uvwrap{position:relative;padding-top:3px}
+.tb-uvribbon{display:flex;height:7px;overflow:hidden;border-radius:2px}
+.tb-uvribbon>div{flex:1}
+.tb-uvnowline{position:absolute;top:3px;width:3px;height:7px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.2);transform:translateX(-50%);border-radius:2px}
+.tb-uvnowval{position:absolute;top:12px;transform:translateX(-50%);font-size:10px;font-weight:900;line-height:1;white-space:nowrap}
+.tb-uvsum{margin-top:11px;font-size:13px;font-weight:800;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;color:#2C1810}
+.tb-uvbadge{flex-shrink:0;display:none;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;white-space:nowrap}
+.tb-uvbadge svg{width:13px;height:13px;display:block}
 .gps-btn{background:#fff;border:2px solid #2C1810;padding:4px 9px;color:#2C1810;font-size:9.5px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:4px;letter-spacing:.2px;border-radius:16px;box-shadow:2px 2px 0 #2C1810;position:relative;z-index:3}
 .gps-dot{width:7px;height:7px;background:#E8202A;border-radius:50%;flex-shrink:0}
 .gps-dot.s{background:#E8202A;animation:blink .8s infinite}
@@ -546,6 +558,15 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   </div>
   <div class="tb-timerow" id="tbTimeRow"></div>
   <div class="tb-summary"><span id="tbSumTxt"></span><span class="tb-alert" id="tbAlert"></span></div>
+  <div class="tb-uvsec">
+    <div class="tb-title"><span>☀️ 자외선 지수</span><span class="tb-leg"><span><i style="background:#22C55E"></i>낮음</span><span><i style="background:#F97316"></i>높음</span><span><i style="background:#A855F7"></i>위험</span></span></div>
+    <div class="tb-uvwrap">
+      <div class="tb-uvribbon" id="tbUvRibbon"></div>
+      <div class="tb-uvnowline" id="tbUvNowLine"></div>
+      <div class="tb-uvnowval" id="tbUvNowVal"></div>
+    </div>
+    <div class="tb-uvsum"><span id="tbUvSumTxt"></span><span class="tb-uvbadge" id="tbUvBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 1.8v2.4M12 19.8v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M1.8 12h2.4M19.8 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/></svg><span id="tbUvBadgeTxt"></span></span></div>
+  </div>
   </div>
 </div>
 
@@ -640,6 +661,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
     <div class="gd-item"><span class="gd-ic">📍</span><span class="gd-tx"><b>‘지금’ 삼각형</b>은 현재 시각이에요. 지금 색이 어떤지 한눈에 보여요.</span></div>
     <div class="gd-item"><span class="gd-ic">🌡️</span><span class="gd-tx"><b>그날 날씨에 맞춰 매일 바뀌어요.</b> 여름엔 한낮이 빨강, 겨울엔 새벽·밤이 빨강으로 나와요.</span></div>
     <div class="gd-item"><span class="gd-ic">⚠️</span><span class="gd-tx"><b>특보는 오른쪽 배지로.</b> 폭염·한파·호우·미세먼지가 심하면 알려드려요.</span></div>
+    <div class="gd-item"><span class="gd-ic">☀️</span><span class="gd-tx"><b>자외선 지수도 함께 보여드려요.</b> 그래프 아래 시간대별 자외선 세기예요. 강할 땐 노란 배지로 알려드려요. 모자·선크림 챙기세요.</span></div>
     <div class="gd-item"><span class="gd-ic">📶</span><span class="gd-tx"><b>위치를 켜면</b> 내 동네 실시간 날씨로 나와요.</span></div>
   </div>
   <div class="info-card">
@@ -989,6 +1011,7 @@ function fetchTimeTip(_try){
 // ─── 오늘 산책하기 좋은 시간 리본 (Open-Meteo 시간별 체감온도) ───
 var TB_START=5, TB_END=22;                 // 새벽5시 ~ 밤10시
 var TB_LABELS=[];           // 시간 라벨 전부 제거
+function uvColor(u){ if(u>=11)return'#A855F7'; if(u>=8)return'#EF4444'; if(u>=6)return'#F97316'; if(u>=3)return'#EAB308'; return'#22C55E'; }
 function tbPenalty(at){
   // 쾌적대(체감 15~23°)에서 벗어난 정도 — 여름·겨울 공통. 더울수록/추울수록 커짐
   if(at<15) return 15-at;
@@ -1023,7 +1046,7 @@ function fetchTimeGraph(_try){
   if(!myLat) return;
   _try=_try||0;
   var url='https://api.open-meteo.com/v1/forecast?latitude='+myLat+'&longitude='+myLng+
-          '&hourly=apparent_temperature,precipitation_probability,precipitation&timezone=auto&forecast_days=1';
+          '&hourly=apparent_temperature,precipitation_probability,precipitation,uv_index&timezone=auto&forecast_days=1';
   fetch(url).then(function(r){return r.json();}).then(function(d){
     if(!d||!d.hourly||!d.hourly.time||!d.hourly.apparent_temperature) throw new Error('no hourly');
     // 시각별 인덱스 매핑 (안전하게 time 문자열의 시(hour)로)
@@ -1130,6 +1153,24 @@ function fetchTimeGraph(_try){
       else if(pm25>=36||pm10>=81){ o2={t:'😷 미세먼지 나쁨',bg:'#F3F4F6',fg:'#4B5563'}; p2=2; }
       if(o2 && p2>alertPrio) setAlert(o2);
     });
+
+    // ── 자외선(UV) 리본 ──
+    if(d.hourly.uv_index){
+      var uvArr=hours.map(function(h){ var ix=byHour[h]; var u=d.hourly.uv_index[ix]; return (typeof u==='number')?u:0; });
+      var ur=document.getElementById('tbUvRibbon'); ur.innerHTML='';
+      uvArr.forEach(function(u){ var dd=document.createElement('div'); dd.style.background=uvColor(u); ur.appendChild(dd); });
+      document.getElementById('tbUvNowLine').style.left=pct+'%';
+      var nowUV=Math.round(uvArr[Math.max(0,nh-TB_START)]||0);
+      var uvv=document.getElementById('tbUvNowVal'); uvv.style.left=pct+'%'; uvv.textContent=nowUV; uvv.style.color=uvColor(nowUV);
+      document.getElementById('tbUvSumTxt').innerHTML='☀️ 지금 자외선 <b style="color:'+uvColor(nowUV)+'">'+nowUV+'</b>';
+      var maxUV=Math.max.apply(null,uvArr), ubadge=null;
+      if(maxUV>=11)      ubadge={t:'자외선 위험',    bg:'#FDE68A',fg:'#92400E'};
+      else if(maxUV>=8)  ubadge={t:'자외선 매우높음',bg:'#FEF9C3',fg:'#854D0E'};
+      else if(maxUV>=6)  ubadge={t:'자외선 강함',    bg:'#FEFCE8',fg:'#A16207'};
+      var ubEl=document.getElementById('tbUvBadge');
+      if(ubadge){ ubEl.style.display='inline-flex'; ubEl.style.background=ubadge.bg; ubEl.style.color=ubadge.fg; document.getElementById('tbUvBadgeTxt').textContent=ubadge.t; }
+      else ubEl.style.display='none';
+    }
 
     document.getElementById('tbPh').style.display='none';
     document.getElementById('tbLeg').style.display='flex';
