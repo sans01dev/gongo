@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.74
+  공원갈까 v6.76
+  - [점검] UV 배지 문구 "강함"→"높음" (기상청 등급·범례와 통일)
+  - [점검] uv_index 없으면 자외선 섹션 자체를 숨김(빈 섹션 방지)
+  (구) v6.75
+  - UV 경고 배지를 오늘 최고(maxUV)→지금(nowUV) 기준으로 수정 (밤엔 UV 0이라 배지 안 뜸)
+  (구) v6.74
   - 인트로 칩 "실시간 자외선 UV지수까지 알려드려요" + 해 SVG 아이콘
   (구) v6.73
   - 인트로 문구 "실시간 자외선 UV 지수 제공"으로 수정 + 🌞 이모지를 해 SVG로 교체
@@ -19,7 +24,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.74</title>
+<title>공원갈까 v6.76</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -568,7 +573,7 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   </div>
   <div class="tb-timerow" id="tbTimeRow"></div>
   <div class="tb-summary"><span id="tbSumTxt"></span><span class="tb-alert" id="tbAlert"></span></div>
-  <div class="tb-uvsec">
+  <div class="tb-uvsec" id="tbUvSec">
     <div class="tb-title"><span>☀️ 자외선 지수</span><span class="tb-leg"><span><i style="background:#22C55E"></i>낮음</span><span><i style="background:#F97316"></i>높음</span><span><i style="background:#A855F7"></i>위험</span></span></div>
     <div class="tb-uvwrap">
       <div class="tb-uvribbon" id="tbUvRibbon"></div>
@@ -1165,7 +1170,9 @@ function fetchTimeGraph(_try){
     });
 
     // ── 자외선(UV) 리본 ──
+    var uvSec=document.getElementById('tbUvSec');
     if(d.hourly.uv_index){
+      uvSec.style.display='block';
       var uvArr=hours.map(function(h){ var ix=byHour[h]; var u=d.hourly.uv_index[ix]; return (typeof u==='number')?u:0; });
       var ur=document.getElementById('tbUvRibbon'); ur.innerHTML='';
       uvArr.forEach(function(u){ var dd=document.createElement('div'); dd.style.background=uvColor(u); ur.appendChild(dd); });
@@ -1173,14 +1180,14 @@ function fetchTimeGraph(_try){
       var nowUV=Math.round(uvArr[Math.max(0,nh-TB_START)]||0);
       var uvv=document.getElementById('tbUvNowVal'); uvv.style.left=pct+'%'; uvv.textContent=nowUV; uvv.style.color=uvColor(nowUV);
       document.getElementById('tbUvSumTxt').innerHTML='☀️ 지금 자외선 <b style="color:'+uvColor(nowUV)+'">'+nowUV+'</b>';
-      var maxUV=Math.max.apply(null,uvArr), ubadge=null;
-      if(maxUV>=11)      ubadge={t:'자외선 위험',    bg:'#FDE68A',fg:'#92400E'};
-      else if(maxUV>=8)  ubadge={t:'자외선 매우높음',bg:'#FEF9C3',fg:'#854D0E'};
-      else if(maxUV>=6)  ubadge={t:'자외선 강함',    bg:'#FEFCE8',fg:'#A16207'};
+      var ubadge=null;   // 배지는 '지금 UV' 기준 (밤엔 UV 0 → 배지 없음)
+      if(nowUV>=11)      ubadge={t:'자외선 위험',    bg:'#FDE68A',fg:'#92400E'};
+      else if(nowUV>=8)  ubadge={t:'자외선 매우높음',bg:'#FEF9C3',fg:'#854D0E'};
+      else if(nowUV>=6)  ubadge={t:'자외선 높음',    bg:'#FEFCE8',fg:'#A16207'};
       var ubEl=document.getElementById('tbUvBadge');
       if(ubadge){ ubEl.style.display='inline-flex'; ubEl.style.background=ubadge.bg; ubEl.style.color=ubadge.fg; document.getElementById('tbUvBadgeTxt').textContent=ubadge.t; }
       else ubEl.style.display='none';
-    }
+    } else { uvSec.style.display='none'; }
 
     document.getElementById('tbPh').style.display='none';
     document.getElementById('tbLeg').style.display='flex';
