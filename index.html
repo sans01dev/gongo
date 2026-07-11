@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.85
+  공원갈까 v6.86
+  - 해안가 온도 저평가 수정: Open-Meteo 날씨 호출에 cell_selection=land 추가
+    (능포동 등 해안은 바다 격자가 잡혀 실제보다 낮게 나오던 문제 → 육지 격자 강제)
+    ※ KMA(기상청) 모델은 Open-Meteo에서 현재 중단(KIM 이전 중)이라 사용 불가
+  (구) v6.85
   - fetchTimeTip(시간대별 인사 문구) 함수 블록 주석 처리(삭제 대신 보류). 기능 변화 0
   (구) v6.84
   - 코드 정리: 미사용 중복 INTRO_MSGS 배열(fetchVisitMeta 안 죽은 복사본) 제거. 기능 변화 0
@@ -43,7 +47,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.85</title>
+<title>공원갈까 v6.86</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -982,7 +986,7 @@ function fetchWeather(_try){
   _try=_try||0;
   var el=document.getElementById('hWeather');
   // 신버전(current) + 구버전(current_weather) 파라미터 둘 다 요청 → 뭐가 오든 대응
-  var url='https://api.open-meteo.com/v1/forecast?latitude='+myLat+'&longitude='+myLng+'&current=temperature_2m,weather_code&current_weather=true';
+  var url='https://api.open-meteo.com/v1/forecast?latitude='+myLat+'&longitude='+myLng+'&current=temperature_2m,weather_code&current_weather=true&cell_selection=land';
   fetch(url).then(function(r){return r.json();}).then(function(d){
     if(!d) throw new Error('no data');
     var t, c;
@@ -1098,7 +1102,7 @@ function fetchTimeGraph(_try){
   if(!myLat) return;
   _try=_try||0;
   var url='https://api.open-meteo.com/v1/forecast?latitude='+myLat+'&longitude='+myLng+
-          '&hourly=apparent_temperature,temperature_2m,precipitation_probability,precipitation,uv_index&timezone=auto&forecast_days=1';
+          '&hourly=apparent_temperature,temperature_2m,precipitation_probability,precipitation,uv_index&timezone=auto&forecast_days=1&cell_selection=land';
   fetch(url).then(function(r){return r.json();}).then(function(d){
     if(!d||!d.hourly||!d.hourly.time||!d.hourly.apparent_temperature) throw new Error('no hourly');
     // 시각별 인덱스 매핑 (안전하게 time 문자열의 시(hour)로)
@@ -1749,7 +1753,7 @@ document.addEventListener('touchstart',e=>{if(e.touches.length>1)e.preventDefaul
     var addrDong=dongFromAddr(rec0&&rec0.paddr);
     if(addrDong){ var dd=loadDays(); if(dd[key]){dd[key].dong=addrDong; saveDays(dd); if(curTab===3)renderRecord();} }
     if(plat==null||plng==null)return;
-    fetch('https://api.open-meteo.com/v1/forecast?latitude='+plat+'&longitude='+plng+'&current_weather=true')
+    fetch('https://api.open-meteo.com/v1/forecast?latitude='+plat+'&longitude='+plng+'&current_weather=true&cell_selection=land')
       .then(function(r){return r.json();}).then(function(j){
         var d=loadDays();if(!d[key])return;
         if(j&&j.current_weather){d[key].wcode=j.current_weather.weathercode;
