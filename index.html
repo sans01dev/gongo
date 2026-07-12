@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.89
+  공원갈까 v6.90
+  - 특보 배지 여러 개 표시: 폭염주의보+열대야처럼 동시 발효 시 나란히(우선순위순 최대 2개)
+    tb-alert를 컨테이너로, 각 특보를 개별 pill(tb-badge)로 렌더
+  (구) v6.89
   - 특보 배지: 자체 판정(체감/최저/강수/열대야) 전부 제거 → 기상청 특보(Worker) 발효현황 그대로
     폭염/한파/호우 경보·주의보 + 열대야주의보 매핑. 미세먼지는 별도 유지. 우선순위 경보>주의보>열대야
     지역 확정(myCity) 후 특보 재조회. 100% 기상청 일치
@@ -56,7 +59,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.89</title>
+<title>공원갈까 v6.90</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -284,8 +287,9 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .tb-lab{position:absolute;transform:translateX(-50%);font-size:11px;font-weight:700;color:#A0876A}
 .tb-summary{margin-top:7px;font-size:13px;font-weight:800;line-height:1.35;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 #tbSumTxt{flex:1;min-width:0}
-.tb-alert{flex-shrink:0;display:none;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;white-space:nowrap;line-height:1.5}
-.tb-alert svg{width:13px;height:13px;display:block;flex-shrink:0}
+.tb-alert{flex-shrink:0;display:none;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.tb-alert .tb-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;white-space:nowrap;line-height:1.5}
+.tb-alert .tb-badge svg{width:13px;height:13px;display:block;flex-shrink:0}
 /* 자외선(UV) 섹션 (v6.70) */
 .tb-uvsec{margin-top:8px;padding-top:7px;border-top:1px solid var(--line)}
 .tb-uvwrap{position:relative;padding-top:3px}
@@ -844,25 +848,29 @@ function warnToBadge(w){
   if(w.indexOf('열대야')===0) return {ic:'tnight',t:'열대야',bg:'#FEE2E2',fg:'#DC2626',prio:3};
   return null;
 }
-function setTbAlert(o){
+function setTbAlert(list){
   var el=document.getElementById('tbAlert'); if(!el) return;
-  if(!o){ el.style.display='none'; el.innerHTML=''; return; }
-  el.style.display='inline-flex'; el.innerHTML=(TB_ICON[o.ic]||'')+'<span>'+o.t+'</span>';
-  el.style.background=o.bg; el.style.color=o.fg;
+  if(!list||!list.length){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='inline-flex';
+  el.innerHTML=list.map(function(o){
+    return '<span class="tb-badge" style="background:'+o.bg+';color:'+o.fg+'">'+(TB_ICON[o.ic]||'')+'<span>'+o.t+'</span></span>';
+  }).join('');
 }
-// 특보 배지 = 기상청 특보(Worker) + 미세먼지 종합. 가장 심각한 것 하나 표시
+// 특보 배지 = 기상청 특보(Worker) 발효현황 + 미세먼지. 여러 개면 우선순위순 최대 2개 표시
 function updateAlert(){
   fetchKma(function(j){
-    var best=null, bestPrio=0;
+    var list=[];
     if(j && j.warnings){ j.warnings.forEach(function(w){
-      var b=warnToBadge(w); if(b && b.prio>bestPrio){ best=b; bestPrio=b.prio; }
+      var b=warnToBadge(w); if(b) list.push(b);
     }); }
     fetchAir(function(pm10,pm25){
-      var o2=null,p2=0;
-      if(pm25>=76||pm10>=151){ o2={ic:'dust',t:'미세먼지 나쁨',bg:'#F3F4F6',fg:'#374151'}; p2=5; }
-      else if(pm25>=36||pm10>=81){ o2={ic:'dust',t:'미세먼지 나쁨',bg:'#F3F4F6',fg:'#4B5563'}; p2=2; }
-      if(o2 && p2>bestPrio){ best=o2; bestPrio=p2; }
-      setTbAlert(best);
+      var o2=null;
+      if(pm25>=76||pm10>=151){ o2={ic:'dust',t:'미세먼지 나쁨',bg:'#F3F4F6',fg:'#374151',prio:5}; }
+      else if(pm25>=36||pm10>=81){ o2={ic:'dust',t:'미세먼지 나쁨',bg:'#F3F4F6',fg:'#4B5563',prio:2}; }
+      if(o2) list.push(o2);
+      var seen={}; list=list.filter(function(b){ if(seen[b.t])return false; seen[b.t]=1; return true; });
+      list.sort(function(a,b){ return (b.prio||0)-(a.prio||0); });
+      setTbAlert(list.slice(0,2));   // 자리 안전하게 최대 2개
     });
   });
 }
