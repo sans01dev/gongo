@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.86
+  공원갈까 v6.89
+  - 특보 배지: 자체 판정(체감/최저/강수/열대야) 전부 제거 → 기상청 특보(Worker) 발효현황 그대로
+    폭염/한파/호우 경보·주의보 + 열대야주의보 매핑. 미세먼지는 별도 유지. 우선순위 경보>주의보>열대야
+    지역 확정(myCity) 후 특보 재조회. 100% 기상청 일치
+  (구) v6.88
+  - 헤더 온도: 기상청(KMA) 실황으로 교체 (CF Worker gongo-weather 경유). 해안 저평가 해결(24→28)
+    아이콘/문구는 Open-Meteo weather_code 유지, Worker 실패 시 Open-Meteo 온도로 폴백
+  (구) v6.87
+  - 열대야 배지 시간 제한: 밤 20시~익일 06시에만 표시 (낮엔 숨김)
+  (구) v6.86
   - 해안가 온도 저평가 수정: Open-Meteo 날씨 호출에 cell_selection=land 추가
     (능포동 등 해안은 바다 격자가 잡혀 실제보다 낮게 나오던 문제 → 육지 격자 강제)
     ※ KMA(기상청) 모델은 Open-Meteo에서 현재 중단(KIM 이전 중)이라 사용 불가
@@ -47,7 +56,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.86</title>
+<title>공원갈까 v6.89</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -812,6 +821,51 @@ function lsGet(k){if(_ok){try{return _LS.getItem(k);}catch(e){}}return (k in _me
 function lsSet(k,v){if(_ok){try{_LS.setItem(k,v);return;}catch(e){_ok=false;}}_mem[k]=String(v);}
 function lsDel(k){if(_ok){try{_LS.removeItem(k);return;}catch(e){}}delete _mem[k];}
 let myLat=null, myLng=null;
+// 기상청 프록시 Worker (온도·특보). 온도=실황, 특보=발효현황
+var GW_URL='https://gongo-weather.san0231ai.workers.dev/';
+function fetchKma(cb){
+  if(myLat==null){ cb(null); return; }
+  var u=GW_URL+'?lat='+myLat+'&lng='+myLng+(window.myCity?('&city='+encodeURIComponent(window.myCity)):'');
+  fetch(u).then(function(r){return r.json();}).then(function(j){ cb(j||null); }).catch(function(){ cb(null); });
+}
+function fetchKmaTemp(cb){ fetchKma(function(j){ cb(j&&typeof j.temp==='number'?j.temp:null); }); }
+// 기상청 특보명 → gongo 배지 (prio 높을수록 우선). 강풍/풍랑/건조 등은 미표시(null)
+function warnToBadge(w){
+  if(!w) return null;
+  if(w.indexOf('폭염')===0) return (w.indexOf('경보')>=0)
+    ? {ic:'heat',t:'폭염경보',bg:'#FEE2E2',fg:'#B91C1C',prio:6}
+    : {ic:'heat',t:'폭염주의보',bg:'#FFEDD5',fg:'#C2410C',prio:4};
+  if(w.indexOf('한파')===0) return (w.indexOf('경보')>=0)
+    ? {ic:'cold',t:'한파경보',bg:'#DBEAFE',fg:'#1D4ED8',prio:6}
+    : {ic:'cold',t:'한파주의보',bg:'#DBEAFE',fg:'#1D4ED8',prio:4};
+  if(w.indexOf('호우')===0) return (w.indexOf('경보')>=0)
+    ? {ic:'rain',t:'호우경보',bg:'#DBEAFE',fg:'#1D4ED8',prio:6}
+    : {ic:'rain',t:'호우주의보',bg:'#DBEAFE',fg:'#1D4ED8',prio:4};
+  if(w.indexOf('열대야')===0) return {ic:'tnight',t:'열대야',bg:'#FEE2E2',fg:'#DC2626',prio:3};
+  return null;
+}
+function setTbAlert(o){
+  var el=document.getElementById('tbAlert'); if(!el) return;
+  if(!o){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='inline-flex'; el.innerHTML=(TB_ICON[o.ic]||'')+'<span>'+o.t+'</span>';
+  el.style.background=o.bg; el.style.color=o.fg;
+}
+// 특보 배지 = 기상청 특보(Worker) + 미세먼지 종합. 가장 심각한 것 하나 표시
+function updateAlert(){
+  fetchKma(function(j){
+    var best=null, bestPrio=0;
+    if(j && j.warnings){ j.warnings.forEach(function(w){
+      var b=warnToBadge(w); if(b && b.prio>bestPrio){ best=b; bestPrio=b.prio; }
+    }); }
+    fetchAir(function(pm10,pm25){
+      var o2=null,p2=0;
+      if(pm25>=76||pm10>=151){ o2={ic:'dust',t:'미세먼지 나쁨',bg:'#F3F4F6',fg:'#374151'}; p2=5; }
+      else if(pm25>=36||pm10>=81){ o2={ic:'dust',t:'미세먼지 나쁨',bg:'#F3F4F6',fg:'#4B5563'}; p2=2; }
+      if(o2 && p2>bestPrio){ best=o2; bestPrio=p2; }
+      setTbAlert(best);
+    });
+  });
+}
 let sorted=[];
 let favs=JSON.parse(lsGet('gonggwon_favs_v1')||'[]');
 let activeFilters=new Set();
@@ -920,6 +974,7 @@ function fetchMyRegion(){
       window.myCity=city||'';
       if(pdong){
         document.getElementById('gpsText').textContent=(city?city+' ':'')+pdong;
+        if(typeof updateAlert==='function') updateAlert();   // 지역 확정 후 특보 재조회
         return;
       }
     }
@@ -1007,6 +1062,10 @@ function fetchWeather(_try){
     else if(c>=95){em='\u26C8\uFE0F';msg='\uCC9C\uB465\uBC88\uAC1C \uC870\uC2EC\uD558\uC138\uC694';}
     el.textContent=em+' '+t+'\u00B0 \u00B7 '+msg;
     el.style.display='inline-flex';
+    // 기상청 실황 온도로 덮어쓰기(해안 저평가 보정). 실패 시 Open-Meteo 값 유지
+    fetchKmaTemp(function(kt){
+      if(kt!=null){ el.textContent=em+' '+kt+'\u00B0 \u00B7 '+msg; }
+    });
   }).catch(function(){
     if(_try<3){ setTimeout(function(){ fetchWeather(_try+1); }, 2000); }  // 실패 시 2초 뒤 재시도(최대 3회)
   });
@@ -1191,27 +1250,8 @@ function fetchTimeGraph(_try){
     var nightLow=t2.length?Math.min.apply(null,t2):tmin;   // 열대야: 실제 최저기온 기준
     var maxRain=0;
     if(d.hourly.precipitation){ hours.forEach(function(h){ var ix=byHour[h]; var v=d.hourly.precipitation[ix]; if(typeof v==='number'&&v>maxRain) maxRain=v; }); }
-    function setAlert(o){
-      var el=document.getElementById('tbAlert');
-      if(!o){ el.style.display='none'; el.innerHTML=''; return; }
-      el.style.display='inline-flex'; el.innerHTML=(TB_ICON[o.ic]||'')+'<span>'+o.t+'</span>'; el.style.background=o.bg; el.style.color=o.fg;
-    }
-    var alertPrio=0, a=null;
-    if(tmax>=35){ a={ic:'heat',t:'폭염경보',bg:'#FEE2E2',fg:'#B91C1C'}; alertPrio=5; }
-    else if(tmin<=-15){ a={ic:'cold',t:'한파경보',bg:'#DBEAFE',fg:'#1D4ED8'}; alertPrio=5; }
-    else if(maxRain>=20){ a={ic:'rain',t:'호우경보',bg:'#DBEAFE',fg:'#1D4ED8'}; alertPrio=5; }
-    else if(nightLow>=25){ a={ic:'tnight',t:'열대야',bg:'#FEE2E2',fg:'#DC2626'}; alertPrio=4; }
-    else if(tmax>=33){ a={ic:'heat',t:'폭염주의보',bg:'#FFEDD5',fg:'#C2410C'}; alertPrio=3; }
-    else if(tmin<=-12){ a={ic:'cold',t:'한파주의보',bg:'#DBEAFE',fg:'#1D4ED8'}; alertPrio=3; }
-    else if(maxRain>=10){ a={ic:'rain',t:'호우주의보',bg:'#DBEAFE',fg:'#1D4ED8'}; alertPrio=3; }
-    setAlert(a);
-    // 미세먼지 — 별도 API, 더 심하면 교체
-    fetchAir(function(pm10,pm25){
-      var o2=null,p2=0;
-      if(pm25>=76||pm10>=151){ o2={ic:'dust',t:'미세먼지 나쁨',bg:'#F3F4F6',fg:'#374151'}; p2=4; }
-      else if(pm25>=36||pm10>=81){ o2={ic:'dust',t:'미세먼지 나쁨',bg:'#F3F4F6',fg:'#4B5563'}; p2=2; }
-      if(o2 && p2>alertPrio) setAlert(o2);
-    });
+    // 특보 배지 = 기상청 특보(Worker) 발효현황 + 미세먼지. 자체 판정 없음(기상청 그대로)
+    updateAlert();
 
     // ── 자외선(UV) 리본 ──
     var uvSec=document.getElementById('tbUvSec');
