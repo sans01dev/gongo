@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.90
+  공원갈까 v6.93
+  - 발바닥 기간 배지: 단위 글자 크기 62%→80%
+  (구) v6.92
+  - 발바닥 기간 배지: 회색 대신 단위 글자(D·M·Y)를 작게 해서 숫자 강조(색은 동일)
+  (구) v6.91
+  - 모찌 발바닥 기간 배지: 단위 글자(D·M·Y)를 연한 회색으로 분리(숫자와 구분)
+  (구) v6.90
   - 특보 배지 여러 개 표시: 폭염주의보+열대야처럼 동시 발효 시 나란히(우선순위순 최대 2개)
     tb-alert를 컨테이너로, 각 특보를 개별 pill(tb-badge)로 렌더
   (구) v6.89
@@ -59,7 +65,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.90</title>
+<title>공원갈까 v6.93</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -1925,7 +1931,11 @@ var _calY=null, _calM=null;
     var inner=pawShape(t.paw);
     if(lab){
       var fs=lab.length>=3?14.5:17.5; // 10% 키움
-      inner+='<text x="49" y="68" font-size="'+fs+'" font-weight="900" fill="'+t.txt+'" text-anchor="middle" style="font-family:sans-serif">'+lab+'</text>';
+      var num=lab.replace(/[^0-9]/g,''), unit=lab.replace(/[0-9]/g,''); // 숫자 / 단위(D·M·Y)
+      inner+='<text x="49" y="68" font-size="'+fs+'" font-weight="900" fill="'+t.txt+'" text-anchor="middle" style="font-family:sans-serif">'
+        +'<tspan>'+num+'</tspan>'
+        +'<tspan font-size="'+(fs*0.80).toFixed(1)+'">'+unit+'</tspan>'   // 단위는 80% 크기
+        +'</text>';
     }
     var attr=px?(' width="'+px+'" height="'+px+'"'):' class="paw"';
     return '<svg'+attr+' viewBox="14 16 70 70" aria-hidden="true">'+inner+'</svg>';
