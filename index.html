@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.95
+  공원갈까 v6.996
+  - 방명록 안내 문구 수정: "전체 방명록" → "나의 전체 방명록"(본인 것만 조회)
+  (구) v6.995
+  - 방명록 안내 카드 위치: 산책 그래프 카드 아래로 이동
+  (구) v6.95
   - "제일 좋은 시간" 추천 상한 20→21시 (여름 저녁 포함)
   (구) v6.94
   - "제일 좋은 시간" 추천을 산책 시간대(6~20시)로 제한 (밤 22시 등 잘 시간 추천 방지)
@@ -69,7 +73,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.95</title>
+<title>공원갈까 v6.996</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -820,6 +824,17 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
     <div class="gd-item"><span class="gd-ic">⚠️</span><span class="gd-tx"><b>특보는 오른쪽 배지로.</b> 폭염·한파·호우·미세먼지가 심하면 알려드려요.</span></div>
     <div class="gd-item"><span class="gd-ic">☀️</span><span class="gd-tx"><b>자외선 지수도 함께 보여드려요.</b> 그래프 아래 시간대별 자외선 세기예요. 강할 땐 노란 배지로 알려드려요. 모자·선크림 챙기세요.</span></div>
     <div class="gd-item"><span class="gd-ic">📶</span><span class="gd-tx"><b>위치를 켜면</b> 내 동네 실시간 날씨로 나와요.</span></div>
+  </div>
+  <div class="info-card">
+    <div class="info-title serif">우리 동네 산책 한마디</div>
+    <div class="info-item">
+      <div class="info-item-label">방명록 티커</div>
+      <div class="info-item-text">홈 화면 위쪽에 이웃들이 남긴 산책 한마디가 한 줄씩 흘러가요.<br>티커를 누르면 나의 전체 방명록을 볼 수 있어요.</div>
+    </div>
+    <div class="info-item">
+      <div class="info-item-label">한마디 남기기</div>
+      <div class="info-item-text"><b>한마디 쓰기</b>를 누르면 나도 남길 수 있어요(최대 40자).<br>처음 한 번 닉네임(2~12자)을 정하면 방명록에 함께 표시돼요.</div>
+    </div>
   </div>
   <div class="info-card">
     <div class="info-title serif">공원 이용 안내</div>
