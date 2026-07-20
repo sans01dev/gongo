@@ -582,6 +582,22 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .gb-time{font-size:11px;font-weight:600;color:#A0876A;margin-left:auto}
 .gb-text{font-size:14.5px;font-weight:700;color:#3D2314;line-height:1.4;word-break:break-all}
 .gb-empty{text-align:center;color:#A0876A;font-size:13.5px;font-weight:700;padding:30px 0}
+
+/* 닉네임 변경 모달 (v6.993) */
+.nk-modal{position:fixed;inset:0;z-index:260;display:none}
+.nk-modal.on{display:block}
+.nk-bg{position:absolute;inset:0;background:rgba(44,24,16,.5)}
+.nk-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,86vw);background:#FFFDF8;border:2.5px solid #2C1810;border-radius:20px;box-shadow:4px 4px 0 #2C1810;padding:22px 20px}
+.nk-title{font-size:18px;font-weight:900;color:#2C1810;text-align:center}
+.nk-sub{font-size:12.5px;font-weight:700;color:#8A7A6A;text-align:center;margin:6px 0 16px}
+.nk-input{width:100%;box-sizing:border-box;border:2px solid #2C1810;border-radius:13px;padding:13px 14px;font-size:16px;font-weight:800;color:#2C1810;outline:none;background:#fff;text-align:center}
+.nk-input:focus{border-color:#D4621A}
+.nk-count{text-align:right;font-size:11.5px;font-weight:700;color:#A0876A;margin:6px 4px 16px}
+.nk-count.over{color:#DC2626}
+.nk-btns{display:flex;gap:9px}
+.nk-cancel{flex:1;border:2px solid #E0D3BE;background:#fff;color:#8A7A6A;font-size:14.5px;font-weight:800;border-radius:13px;padding:13px 0;cursor:pointer}
+.nk-ok{flex:1.6;border:none;background:#D4621A;color:#fff;font-size:14.5px;font-weight:900;border-radius:13px;padding:13px 0;cursor:pointer;box-shadow:2px 2px 0 #2C1810}
+.nk-ok:disabled{background:#D9C9B4;box-shadow:none}
 </style>
 </head>
 <body>
@@ -652,6 +668,21 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
       <button class="gb-write" id="gbWriteBtn" onclick="gbWrite()">한마디 쓰기</button>
     </div>
     <div class="gb-track" id="gbTrack" onclick="gbOpen()"><span class="gb-line">첫 한마디를 남겨보세요</span></div>
+  </div>
+</div>
+
+<!-- 닉네임 변경 모달 -->
+<div class="nk-modal" id="nkModal">
+  <div class="nk-bg" onclick="nkCancel()"></div>
+  <div class="nk-card">
+    <div class="nk-title">닉네임 정하기</div>
+    <div class="nk-sub">방명록·랭킹에 표시돼요 (2~12자)</div>
+    <input class="nk-input" id="nkInput" maxlength="12" placeholder="예: 능포동 산책왕" autocomplete="off">
+    <div class="nk-count"><span id="nkCount">0</span>/12</div>
+    <div class="nk-btns">
+      <button class="nk-cancel" onclick="nkCancel()">취소</button>
+      <button class="nk-ok" onclick="nkConfirm()">이 닉네임으로</button>
+    </div>
   </div>
 </div>
 
@@ -2446,18 +2477,34 @@ var _calY=null, _calM=null;
     }
     wrap.innerHTML=html;
   }
+  function refreshNickSub(){
+    var sub=document.getElementById('gbSub');
+    if(sub){ sub.innerHTML='\uB0B4 \uB2C9\uB124\uC784: <b class="gb-mynick">'+esc(nick())+'</b>'+
+      '<button class="gb-nick-edit" onclick="gbChangeNick()">\uBCC0\uACBD</button>'; }
+  }
+  function nkUpdateCount(){
+    var i=document.getElementById('nkInput'), c=document.getElementById('nkCount');
+    if(!i||!c)return; var n=i.value.trim().length;
+    c.textContent=n; c.parentNode.classList.toggle('over', n>12);
+    var ok=document.querySelector('.nk-ok'); if(ok) ok.disabled=(n<2||n>12);
+  }
   window.gbChangeNick=function(){
-    var cur=nick();
-    var v=prompt('\uBC29\uBA85\uB85D\uC5D0 \uD45C\uC2DC\uD560 \uB2C9\uB124\uC784 (2~12\uC790)', cur);
-    if(v===null) return;
-    v=v.trim();
+    var m=document.getElementById('nkModal'), i=document.getElementById('nkInput');
+    if(!m||!i)return;
+    i.value=nick(); m.classList.add('on'); nkUpdateCount();
+    setTimeout(function(){ i.focus(); i.select(); }, 80);
+    i.oninput=nkUpdateCount;
+  };
+  window.nkCancel=function(){ var m=document.getElementById('nkModal'); if(m)m.classList.remove('on'); };
+  window.nkConfirm=function(){
+    var i=document.getElementById('nkInput'); if(!i)return;
+    var v=i.value.trim();
     if(v.length<2||v.length>12){ if(window.showToast)window.showToast('\uB2C9\uB124\uC784\uC740 2~12\uC790\uB85C \uC815\uD574\uC8FC\uC138\uC694'); return; }
     try{ localStorage.setItem('gongo_nick_v1', v); }catch(e){}
     if(window.__gongoRank) window.__gongoRank.nick=v;
     if(typeof window.renderRankLine==='function'){ try{ window.renderRankLine(); }catch(e){} }
-    var sub=document.getElementById('gbSub');
-    if(sub){ sub.innerHTML='\uB0B4 \uB2C9\uB124\uC784: <b class="gb-mynick">'+esc(v)+'</b>'+
-      '<button class="gb-nick-edit" onclick="gbChangeNick()">\uBCC0\uACBD</button>'; }
+    window.nkCancel();
+    refreshNickSub();
     if(window.showToast)window.showToast('\uB2C9\uB124\uC784\uC744 \u2018'+v+'\u2019(\uC73C)\uB85C \uBC14\uAFE8\uC5B4\uC694');
   };
 
