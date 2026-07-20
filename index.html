@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.93
+  공원갈까 v6.95
+  - "제일 좋은 시간" 추천 상한 20→21시 (여름 저녁 포함)
+  (구) v6.94
+  - "제일 좋은 시간" 추천을 산책 시간대(6~20시)로 제한 (밤 22시 등 잘 시간 추천 방지)
+  (구) v6.93
   - 발바닥 기간 배지: 단위 글자 크기 62%→80%
   (구) v6.92
   - 발바닥 기간 배지: 회색 대신 단위 글자(D·M·Y)를 작게 해서 숫자 강조(색은 동일)
@@ -65,7 +69,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.93</title>
+<title>공원갈까 v6.95</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -544,6 +548,40 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .rec-share{margin-top:16px;width:100%;border:0;background:var(--accent);color:#fff;font-weight:800;
   font-size:16px;padding:15px;border-radius:14px;cursor:pointer}
 .rec-disc{font-size:11.5px;color:var(--sub);text-align:center;margin:14px 6px 4px;font-weight:600;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== 방명록 티커 (v6.96) ===== */
+.gb{padding:8px 16px 0}
+.gb-box{background:var(--card);border:2px solid #2C1810;border-radius:14px;padding:11px 13px;box-shadow:2px 2px 0 #2C1810}
+.gb-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.gb-title{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:900;color:#2C1810}
+.gb-ico{font-size:15px}
+.gb-write{flex:none;border:none;font-size:12px;font-weight:800;color:#fff;background:#D4621A;border-radius:9px;padding:6px 12px;cursor:pointer;white-space:nowrap;box-shadow:1px 1px 0 #2C1810}
+.gb-track{height:24px;overflow:hidden;position:relative;background:#FBF6EE;border-radius:9px;padding:0 10px;cursor:pointer}
+.gb-line{display:block;font-size:13.5px;font-weight:800;color:#2C1810;line-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:transform .5s ease,opacity .5s ease}
+.gb-line.up{transform:translateY(-24px);opacity:0}
+.gb-line b{color:#D4621A}
+.gb-line .gb-nk{color:#fff;background:#D4621A;border-radius:6px;padding:1px 7px;font-weight:900;margin-right:1px}
+/* 시트 */
+.gb-sheet{position:fixed;inset:0;z-index:200;display:none}
+.gb-sheet.on{display:block}
+.gb-sheet-bg{position:absolute;inset:0;background:rgba(44,24,16,.45)}
+.gb-sheet-card{position:absolute;left:0;right:0;bottom:0;background:var(--bg,#F5F0E8);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:76vh;display:flex;flex-direction:column}
+.gb-sheet-head{display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:900;color:#2C1810;margin-bottom:14px}
+.gb-x{border:none;background:transparent;font-size:18px;color:#8A7A6A;cursor:pointer}
+.gb-write-row{display:flex;gap:8px}
+.gb-input{flex:1;min-width:0;border:2px solid #2C1810;border-radius:12px;padding:12px 13px;font-size:15px;font-weight:700;color:#2C1810;outline:none;background:#fff}
+.gb-send{flex:none;border:none;background:#D4621A;color:#fff;font-size:14px;font-weight:900;border-radius:12px;padding:0 16px;cursor:pointer}
+.gb-write-sub{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#8A7A6A;margin:9px 2px 13px}
+.gb-mynick{color:#D4621A;font-weight:900}
+.gb-nick-edit{border:1.5px solid #D4621A;background:#fff;color:#D4621A;font-size:11.5px;font-weight:800;border-radius:8px;padding:3px 10px;cursor:pointer;margin-left:auto}
+.gb-list{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.gb-item{background:#fff;border:1.5px solid #E8DCC8;border-radius:13px;padding:12px 13px;margin-bottom:9px}
+.gb-item-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.gb-nick{font-size:13px;font-weight:900;color:#fff;background:#D4621A;border-radius:7px;padding:2px 9px}
+.gb-region{font-size:11.5px;font-weight:700;color:#D4621A;background:#FBE0CD;border-radius:7px;padding:2px 7px}
+.gb-time{font-size:11px;font-weight:600;color:#A0876A;margin-left:auto}
+.gb-text{font-size:14.5px;font-weight:700;color:#3D2314;line-height:1.4;word-break:break-all}
+.gb-empty{text-align:center;color:#A0876A;font-size:13.5px;font-weight:700;padding:30px 0}
 </style>
 </head>
 <body>
@@ -605,6 +643,35 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
   </div>
   <div class="h-rule"></div>
 </div>
+
+<!-- ===== 동네 방명록 티커 (v6.96) ===== -->
+<div class="gb" id="gbWrap">
+  <div class="gb-box">
+    <div class="gb-top">
+      <span class="gb-title"><span class="gb-ico">📢</span>우리 동네 산책 한마디</span>
+      <button class="gb-write" id="gbWriteBtn" onclick="gbWrite()">한마디 쓰기</button>
+    </div>
+    <div class="gb-track" id="gbTrack" onclick="gbOpen()"><span class="gb-line">첫 한마디를 남겨보세요</span></div>
+  </div>
+</div>
+
+<!-- 방명록 전체보기/쓰기 시트 -->
+<div class="gb-sheet" id="gbSheet">
+  <div class="gb-sheet-bg" onclick="gbClose()"></div>
+  <div class="gb-sheet-card">
+    <div class="gb-sheet-head">
+      <span>우리 동네 산책 한마디</span>
+      <button class="gb-x" onclick="gbClose()">✕</button>
+    </div>
+    <div class="gb-write-row">
+      <input class="gb-input" id="gbInput" maxlength="40" placeholder="오늘 산책 어땠어요? (40자)" autocomplete="off">
+      <button class="gb-send" id="gbSend" onclick="gbSubmit()">남기기</button>
+    </div>
+    <div class="gb-write-sub" id="gbSub"></div>
+    <div class="gb-list" id="gbList"></div>
+  </div>
+</div>
+
 <div class="timebar" id="timeBar">
   <div class="tb-title"><span>🌳 오늘 산책하기 좋은 시간</span><span class="tb-leg" id="tbLeg" style="display:none"><span><i style="background:#22D3EE"></i>좋음</span><span><i style="background:#FB923C"></i>보통</span><span><i style="background:#DC2626"></i>나쁨</span></span></div>
   <div class="tb-ph" id="tbPh">📍 위치를 확인하면 오늘 걷기 좋은 시간을 알려드려요</div>
@@ -1214,9 +1281,10 @@ function fetchTimeGraph(_try){
       var key = nn<=0.33?'good':(nn<=0.66?'ok':'bad');
       return {c:tbGrad(nn), key:key};              // 색은 연속, 요약용 key는 3단계
     });
-    // 오늘 제일 나은 시각(벌점 최소, 위험·비 제외)
+    // 오늘 제일 나은 시각(벌점 최소, 위험·비 제외). 추천은 상식적인 산책 시간대(6~20시)만
     var bestH=null, bestP=Infinity;
     for(var bi=0;bi<hours.length;bi++){
+      if(hours[bi]<6||hours[bi]>21) continue;   // 추천은 6~21시(여름 저녁 포함, 밤늦은 잘 시간 제외)
       if(pps[bi]>=60||ats[bi]>=35||ats[bi]<=-12) continue;
       if(pens[bi]<bestP){ bestP=pens[bi]; bestH=hours[bi]; }
     }
@@ -2226,5 +2294,220 @@ var _calY=null, _calM=null;
   scatter(document.getElementById('loWm'),{min:6,max:9,sz0:46,sz1:104,t0:-4,t1:88});
 })();
 </script>
+
+<!-- Firebase (compat CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  window.__fbReady = false;
+  var FBCFG = {
+    apiKey: "AIzaSyAmiz7U4IWiQLTVooQhi9DpaULqgpqrRa0",
+    authDomain: "gongo-todo.firebaseapp.com",
+    projectId: "gongo-todo",
+    storageBucket: "gongo-todo.firebasestorage.app",
+    messagingSenderId: "239914535823",
+    appId: "1:239914535823:web:e837499f84baaf74e099fa"
+  };
+  var tries = 0;
+  function tryInit(){
+    tries++;
+    // SDK가 아직 안 실려있으면 잠깐 뒤 재시도 (최대 ~10초)
+    if(typeof firebase === 'undefined' || !firebase.firestore){
+      if(tries < 50){ return setTimeout(tryInit, 200); }
+      console.warn('firebase SDK 로드 실패 — localStorage 폴백');
+      return;
+    }
+    try{
+      if(!firebase.apps || !firebase.apps.length){ firebase.initializeApp(FBCFG); }
+      window.__db = firebase.firestore();
+      window.__fbReady = true;
+      // 이미 방명록이 시작됐다면 다시 붙여서 실시간 구독 활성화
+      if(typeof window.__gbStart === 'function'){ try{ window.__gbStart(); }catch(e){} }
+    }catch(e){ window.__fbReady=false; console.warn('firebase init fail', e); }
+  }
+  tryInit();
+})();
+</script>
+<script>
+/* ================= 동네 방명록 (v6.99 · Firebase 연동/localStorage) =================
+   0단계: Firebase 붙이기 전, localStorage로 실제처럼 동작.
+   1단계에서 gbLoad/gbSave만 Firestore로 교체하면 됨. */
+(function(){
+  var KEY='gongo_guestbook_v1';
+  var tickerTimer=null, tickerIdx=0, tickerData=[];
+
+  function nick(){
+    var n=null; try{ n=localStorage.getItem('gongo_nick_v1'); }catch(e){}
+    return n || '산책러';
+  }
+  function region(){ return (window.myDong)|| (window.myCity) || ''; }
+  function esc(s){ return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function timeAgo(ts){
+    var d=Math.floor((Date.now()-ts)/1000);
+    if(d<60) return '방금';
+    if(d<3600) return Math.floor(d/60)+'분 전';
+    if(d<86400) return Math.floor(d/3600)+'시간 전';
+    return Math.floor(d/86400)+'일 전';
+  }
+  // 금칙어/스팸 최소 필터
+  var BAD=['시발','씨발','개새','병신','좆','섹스','도박','대출','http://','https://','www.'];
+  function clean(t){
+    t=String(t||'').trim().replace(/\s+/g,' ');
+    if(t.length<2) return {ok:false,msg:'2자 이상 입력해 주세요'};
+    if(t.length>40) t=t.slice(0,40);
+    var low=t.toLowerCase();
+    for(var i=0;i<BAD.length;i++){ if(low.indexOf(BAD[i])>=0) return {ok:false,msg:'부적절한 내용이 있어요'}; }
+    return {ok:true,text:t};
+  }
+
+  // ---- 저장소 (0단계: localStorage) ----
+  function gbLoad(){
+    try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ return []; }
+  }
+  function gbSaveAll(arr){
+    try{ localStorage.setItem(KEY, JSON.stringify(arr.slice(0,100))); }catch(e){}
+  }
+  // 초기 시드(빈 방 방지) — 진짜 글 쌓이면 자동으로 밀려남
+  function seedIfEmpty(){
+    var a=gbLoad();
+    if(a.length) return a;
+    var seed=[
+      {nick:'동네산책러', region:'', text:'오늘 바람이 선선해서 걷기 좋아요', ts:Date.now()-1000*60*8, seed:true},
+      {nick:'아침걷기', region:'', text:'공원에 벚꽃 폈네요 🌸', ts:Date.now()-1000*60*23, seed:true},
+      {nick:'저녁마실', region:'', text:'저녁 산책 30분 완료!', ts:Date.now()-1000*60*47, seed:true}
+    ];
+    gbSaveAll(seed);
+    return seed;
+  }
+
+  // ---- 티커 ----
+  function fmtLine(item){
+    // 동네 표시는 잠시 보류 (위치 정확도 확보 후 재도입)
+    // var r=item.region?('<b>'+esc(item.region)+'</b> '):'';
+    return '<b class="gb-nk">'+esc(item.nick)+'</b>님 &middot; '+esc(item.text);
+  }
+  var unsub=null;
+  function startTicker(){
+    // Firestore 실시간 구독 (남들 글도 자동 반영). 실패 시 localStorage 폴백.
+    if(window.__fbReady && window.__db){
+      try{
+        unsub && unsub();
+        unsub = window.__db.collection('guestbook')
+          .orderBy('ts','desc').limit(30)
+          .onSnapshot(function(snap){
+            var arr=[];
+            snap.forEach(function(doc){
+              var d=doc.data();
+              arr.push({ nick:d.nick||'산책러', region:d.region||'', text:d.text||'',
+                         ts:(d.ts&&d.ts.toMillis)?d.ts.toMillis():Date.now() });
+            });
+            if(arr.length){ tickerData=arr; }
+            else { tickerData=seedIfEmpty(); }
+            if(tickerIdx>=tickerData.length) tickerIdx=0;
+            showTickerLine();
+            if(document.getElementById('gbSheet').classList.contains('on')) renderList();
+          }, function(err){ console.warn('gb snapshot err',err); tickerData=seedIfEmpty(); showTickerLine(); });
+      }catch(e){ tickerData=seedIfEmpty(); showTickerLine(); }
+    } else {
+      tickerData=seedIfEmpty(); showTickerLine();
+    }
+    if(tickerTimer) clearInterval(tickerTimer);
+    tickerIdx=0; showTickerLine();
+    tickerTimer=setInterval(nextLine, 60000);
+  }
+  function showTickerLine(){
+    var track=document.getElementById('gbTrack'); if(!track||!tickerData.length)return;
+    track.innerHTML='<span class="gb-line">'+fmtLine(tickerData[tickerIdx%tickerData.length])+'</span>';
+  }
+  function nextLine(){
+    var track=document.getElementById('gbTrack'); if(!track||!tickerData.length)return;
+    var cur=track.querySelector('.gb-line');
+    if(cur){ cur.classList.add('up'); }
+    setTimeout(function(){
+      tickerIdx=(tickerIdx+1)%tickerData.length;
+      showTickerLine();
+    }, 500);
+  }
+
+  // ---- 시트(전체보기/쓰기) ----
+  function renderList(){
+    var wrap=document.getElementById('gbList'); if(!wrap)return;
+    var a = (window.__fbReady && tickerData && tickerData.length && !tickerData[0].seed) ? tickerData : gbLoad();
+    if(!a.length){ wrap.innerHTML='<div class="gb-empty">아직 글이 없어요.<br>첫 한마디를 남겨보세요!</div>'; return; }
+    var html='';
+    for(var i=0;i<a.length;i++){
+      var it=a[i];
+      html+='<div class="gb-item"><div class="gb-item-top">'+
+        '<span class="gb-nick">'+esc(it.nick)+'</span>'+
+        /* 동네 배지 보류: (it.region?'<span class="gb-region">'+esc(it.region)+'</span>':'')+ */
+        '<span class="gb-time">'+timeAgo(it.ts)+'</span></div>'+
+        '<div class="gb-text">'+esc(it.text)+'</div></div>';
+    }
+    wrap.innerHTML=html;
+  }
+  window.gbChangeNick=function(){
+    var cur=nick();
+    var v=prompt('\uBC29\uBA85\uB85D\uC5D0 \uD45C\uC2DC\uD560 \uB2C9\uB124\uC784 (2~12\uC790)', cur);
+    if(v===null) return;
+    v=v.trim();
+    if(v.length<2||v.length>12){ if(window.showToast)window.showToast('\uB2C9\uB124\uC784\uC740 2~12\uC790\uB85C \uC815\uD574\uC8FC\uC138\uC694'); return; }
+    try{ localStorage.setItem('gongo_nick_v1', v); }catch(e){}
+    if(window.__gongoRank) window.__gongoRank.nick=v;
+    if(typeof window.renderRankLine==='function'){ try{ window.renderRankLine(); }catch(e){} }
+    var sub=document.getElementById('gbSub');
+    if(sub){ sub.innerHTML='\uB0B4 \uB2C9\uB124\uC784: <b class="gb-mynick">'+esc(v)+'</b>'+
+      '<button class="gb-nick-edit" onclick="gbChangeNick()">\uBCC0\uACBD</button>'; }
+    if(window.showToast)window.showToast('\uB2C9\uB124\uC784\uC744 \u2018'+v+'\u2019(\uC73C)\uB85C \uBC14\uAFE8\uC5B4\uC694');
+  };
+
+  window.gbOpen=function(){
+    var sub=document.getElementById('gbSub');
+    if(sub){
+      sub.innerHTML='\uB0B4 \uB2C9\uB124\uC784: <b class="gb-mynick">'+esc(nick())+'</b>'+
+        '<button class="gb-nick-edit" onclick="gbChangeNick()">\uBCC0\uACBD</button>';
+    }
+    renderList();
+    document.getElementById('gbSheet').classList.add('on');
+  };
+  window.gbClose=function(){ document.getElementById('gbSheet').classList.remove('on'); };
+  window.gbWrite=function(){ window.gbOpen(); setTimeout(function(){ var i=document.getElementById('gbInput'); if(i)i.focus(); },100); };
+  window.gbSubmit=function(){
+    var inp=document.getElementById('gbInput'); if(!inp)return;
+    // 1인 1분 1회 제한
+    var last=0; try{ last=+localStorage.getItem('gongo_gb_last')||0; }catch(e){}
+    if(Date.now()-last < 60000){ if(window.showToast)window.showToast('잠시 후 다시 남겨주세요'); return; }
+    var c=clean(inp.value);
+    if(!c.ok){ if(window.showToast)window.showToast(c.msg); return; }
+    try{ localStorage.setItem('gongo_gb_last', Date.now()); }catch(e){}
+    inp.value='';
+    if(window.__fbReady && window.__db){
+      window.__db.collection('guestbook').add({
+        nick: nick(), region: region(), text: c.text,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(){
+        if(window.showToast)window.showToast('한마디를 남겼어요!');
+        // onSnapshot이 자동으로 티커/목록 갱신
+      }).catch(function(err){
+        console.warn('gb add err',err);
+        if(window.showToast)window.showToast('전송 실패 — 잠시 후 다시 시도해 주세요');
+      });
+    } else {
+      // 폴백: localStorage
+      var a=gbLoad().filter(function(x){return !x.seed;});
+      a.unshift({ nick:nick(), region:region(), text:c.text, ts:Date.now() });
+      gbSaveAll(a); renderList();
+      tickerData=gbLoad(); tickerIdx=0; showTickerLine();
+      if(window.showToast)window.showToast('한마디를 남겼어요!');
+    }
+  };
+
+  // 시작 (헤더 렌더 후). init이 늦게 끝나면 __gbStart로 재구독.
+  window.__gbStart = startTicker;
+  if(document.readyState!=='loading') startTicker();
+  else document.addEventListener('DOMContentLoaded', startTicker);
+})();
+</script>
+
 </body>
 </html>
