@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v7.1
+  공원갈까 v7.5
+  - visits 익명 수집 시작: "다녀왔어요"(그날 첫 도장) 시 Firestore visits에 익명 1줄 추가 (park/dong/plat/plng/ts, uid 없음)
+  - 기록 상세: 공원명 우측에 "N번 다녀감"(#B8A48A, 우측정렬) — 방문 이벤트 횟수, VISIT_MIN=3 이상일 때만 노출, 미만은 숨김 / 세션 캐시로 read 절감
+  - Firestore 규칙에 visits 블록 추가 (별도 firestore_rules.txt로 콘솔 덮어쓰기 필요)
+  (구) v7.4
+  - 닉네임 저장 통일(window 공유 캐시+localStorage): 랭킹/방명록이 각각 저장하던 것을 하나로 → 변경 시 항상 마지막 닉네임 유지(옛 값/기본값 복귀 버그 수정)
+  (구) v7.3
+  - 헤더 날씨배지: 맑음/구름/흐림일 때 기온별 산책 문구로 분기 ("공원 가기 좋아요"는 23~26도대에만)
+  (구) v7.2
+  - 헤더 날씨배지: 폭염/한파 시 리본과 동일 신호로 "더위 조심하세요"/"추워요, 따뜻하게" 우선표시 (맑음에도 폭염이면 "가기 좋아요" 안 뜸)
+  - 헤더 날씨문구 맞춤법: "안개 껴어요" → "안개 꼈어요"
+  (구) v7.1
   - 방명록 티커: 닉네임 pill 왼쪽 고정, 글 부분만 가로 스크롤 (flex 구조)
   (구) v7.0
   - 방명록 티커: 긴 글 잘림(…) → 가로 스크롤(오른쪽→왼쪽 1회) 처리, 짧은 글은 정지
@@ -83,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v7.1</title>
+<title>공원갈까 v7.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -556,7 +567,9 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .rec-prog-cap b{color:var(--accent)}
 .rec-detail{background:var(--card);border-radius:14px;padding:14px 16px;margin-top:14px;box-shadow:0 2px 12px rgba(61,35,20,.08)}
 .rec-detail .d-date{font-size:15px;font-weight:800;color:var(--ink)}
-.rec-detail .d-park{font-size:15px;font-weight:800;color:var(--accent);margin-top:6px}
+.rec-detail .d-park{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:6px}
+.rec-detail .d-park .d-pk-name{font-size:15px;font-weight:800;color:var(--accent)}
+.rec-detail .d-visits{font-size:13px;font-weight:700;color:#B8A48A;white-space:nowrap;flex-shrink:0;display:none}
 .rec-detail .d-meta{font-size:13px;font-weight:600;color:var(--sub);margin-top:4px}
 .rec-detail .d-cheer{color:#2FB89F;font-weight:700}
 .rec-share{margin-top:16px;width:100%;border:0;background:var(--accent);color:#fff;font-weight:800;
@@ -955,6 +968,19 @@ var _ok=(function(){try{if(!_LS)return false;_LS.setItem('__t','1');_LS.removeIt
 function lsGet(k){if(_ok){try{return _LS.getItem(k);}catch(e){}}return (k in _mem)?_mem[k]:null;}
 function lsSet(k,v){if(_ok){try{_LS.setItem(k,v);return;}catch(e){_ok=false;}}_mem[k]=String(v);}
 function lsDel(k){if(_ok){try{_LS.removeItem(k);return;}catch(e){}}delete _mem[k];}
+// ── 닉네임 단일 소스: window 공유 캐시(세션 내 항상 최신) + localStorage 백업 ──
+// 랭킹/방명록이 제각각 저장하던 걸 하나로 통일. 마지막 변경이 항상 이김.
+window.__gongoNick = null;
+window.gongoGetNick = function(){
+  if(window.__gongoNick != null) return window.__gongoNick;   // 이번 세션에서 정한 값 우선
+  var n=null; try{ n=localStorage.getItem('gongo_nick_v1'); }catch(e){}
+  window.__gongoNick = n || null;
+  return window.__gongoNick;
+};
+window.gongoSetNick = function(v){
+  window.__gongoNick = v;                                     // 즉시 최신값 반영(메모리)
+  try{ localStorage.setItem('gongo_nick_v1', v); }catch(e){}  // 가능하면 영구 저장
+};
 let myLat=null, myLng=null;
 // 기상청 프록시 Worker (온도·특보). 온도=실황, 특보=발효현황
 var GW_URL='https://gongo-weather.san0231ai.workers.dev/';
@@ -1175,6 +1201,29 @@ function reLoc(){
 }
 
 // ─── 리스트 빌드 ───
+// 헤더 날씨배지: 하늘상태 문구 + (맑음/구름/흐림이면) 기온별 문구 + (체감 폭염/한파면) 리본 신호로 최우선 덮어쓰기
+window.__wxNow=null;                             // 리본 현재상태 key: heat/chill/…
+window.__hw={temp:null,em:'',msg:'',good:false}; // good=맑음·구름·흐림(강수 아님)
+// 맑음/구름/흐림일 때 기온(℃)별 산책 문구
+window.hwTempMsg=function(t){
+  if(t>=30) return '더워요, 그늘로 걸어요';
+  if(t>=27) return '조금 더워요';
+  if(t>=23) return '공원 가기 좋아요';
+  if(t>=16) return '산책하기 딱 좋아요';
+  if(t>=9)  return '선선해요, 걷기 좋아요';
+  if(t>=3)  return '쌀쌀해요, 겉옷 챙겨요';
+  return '추워요, 따뜻하게';
+};
+window.renderHeaderBadge=function(){
+  var el=document.getElementById('hWeather'); var hw=window.__hw;
+  if(!el||hw.temp==null) return;
+  var e=hw.em, m=hw.msg;
+  if(hw.good){ m=window.hwTempMsg(hw.temp); }                               // 맑음·구름·흐림 → 기온별 문구
+  if(window.__wxNow==='heat'){ e='\uD83E\uDD75'; m='더위 조심하세요'; }       // 🥵 (체감 폭염 최우선)
+  else if(window.__wxNow==='chill'){ e='\uD83E\uDD76'; m='추워요, 따뜻하게'; } // 🥶 (체감 한파 최우선)
+  el.textContent=e+' '+hw.temp+'\u00B0 \u00B7 '+m;
+  el.style.display='inline-flex';
+};
 function fetchWeather(_try){
   if(!myLat) return;
   _try=_try||0;
@@ -1193,17 +1242,16 @@ function fetchWeather(_try){
     if(c===0){em='\u2600\uFE0F';msg='\uACF5\uC6D0 \uAC00\uAE30 \uC88B\uC544\uC694';}
     else if(c===1||c===2){em='\u26C5';msg='\uACF5\uC6D0 \uAC00\uAE30 \uC88B\uC544\uC694';}
     else if(c===3){em='\u2601\uFE0F';msg='\uB098\uB4E4\uC774 \uBB34\uB09C\uD574\uC694';}
-    else if(c===45||c===48){em='\uD83C\uDF2B\uFE0F';msg='\uC548\uAC1C \uAEBC\uC5B4\uC694';}
+    else if(c===45||c===48){em='\uD83C\uDF2B\uFE0F';msg='안개 꼈어요';}
     else if(c>=51&&c<=67){em='\uD83C\uDF27\uFE0F';msg='\uC6B0\uC0B0 \uCC59\uAE30\uC138\uC694';}
     else if(c>=71&&c<=77){em='\u2744\uFE0F';msg='\uB208 \uC640\uC694';}
     else if(c>=80&&c<=82){em='\uD83C\uDF26\uFE0F';msg='\uC18C\uB098\uAE30 \uC870\uC2EC\uD558\uC138\uC694';}
     else if(c>=85&&c<=86){em='\uD83C\uDF28\uFE0F';msg='\uB208 \uC640\uC694';}
     else if(c>=95){em='\u26C8\uFE0F';msg='\uCC9C\uB465\uBC88\uAC1C \uC870\uC2EC\uD558\uC138\uC694';}
-    el.textContent=em+' '+t+'\u00B0 \u00B7 '+msg;
-    el.style.display='inline-flex';
+    window.__hw={temp:t,em:em,msg:msg,good:(c<=3)}; window.renderHeaderBadge();
     // 기상청 실황 온도로 덮어쓰기(해안 저평가 보정). 실패 시 Open-Meteo 값 유지
     fetchKmaTemp(function(kt){
-      if(kt!=null){ el.textContent=em+' '+kt+'\u00B0 \u00B7 '+msg; }
+      if(kt!=null){ window.__hw.temp=kt; window.renderHeaderBadge(); }
     });
   }).catch(function(){
     if(_try<3){ setTimeout(function(){ fetchWeather(_try+1); }, 2000); }  // 실패 시 2초 뒤 재시도(최대 3회)
@@ -1384,6 +1432,7 @@ function fetchTimeGraph(_try){
     var st=document.getElementById('tbSumTxt');
     st.style.color=col;
     st.textContent=emoji+' '+main+(sub?(' · '+sub):'');
+    window.__wxNow=nowS.key; if(window.renderHeaderBadge) window.renderHeaderBadge();
 
     // ── 날씨 특보 배지 (해당될 때만) ──
     var tmax=Math.max.apply(null,ats), tmin=Math.min.apply(null,ats);
@@ -1970,6 +2019,17 @@ var BACK_MSGS=["다시 오셨네요, 반가워요 😊","오늘부터 또 시작
       var _gap=_prevStamp?diffDays(_prevStamp,today):0;
       var msg=updateStreak(st,today,days);
       saveDays(days);saveStreak(st);
+      // 동네 인기 공원 집계용 익명 수집 (오늘 첫 도장일 때만 · uid 없음)
+      if(window.__fbReady && window.__db && modalPark){
+        try{
+          window.__db.collection('visits').add({
+            park: modalPark.name,
+            dong: (window.myDong||window.myCity||''),
+            plat: modalPark.lat, plng: modalPark.lng,
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+          }).catch(function(){});
+        }catch(e){}
+      }
       fetchVisitMeta(today);
       var cheerMsg=msg||pickStampMsg(_gap);
       var vc=document.getElementById('visitCheer');
@@ -2118,8 +2178,8 @@ var _calY=null, _calM=null;
     return base+'산책러'+num;
   }
   function getNick(){
-    var n=lsGet('gongo_nick_v1');
-    if(!n){ n=genNick(); lsSet('gongo_nick_v1',n); }
+    var n=window.gongoGetNick();
+    if(!n){ n=genNick(); window.gongoSetNick(n); }
     return n;
   }
   function changeNick(){
@@ -2128,7 +2188,7 @@ var _calY=null, _calM=null;
     if(v===null) return;
     v=v.trim();
     if(v.length<2||v.length>12){ showToast('닉네임은 2~12자로 정해주세요'); return; }
-    lsSet('gongo_nick_v1',v);
+    window.gongoSetNick(v);
     showToast('닉네임을 \u2018'+v+'\u2019(으)로 바꿨어요');
     if(window.__gongoRank) window.__gongoRank.nick=v;
     renderRankLine();
@@ -2264,6 +2324,23 @@ var _calY=null, _calM=null;
       }
     },{passive:true});
   })();
+  var VISIT_MIN=3;              // 이 값 이상일 때만 "N명 다녀감" 노출 (조절용 상수)
+  var _visitCountCache={};      // 세션 캐시 (같은 공원 재조회 read 절감)
+  function paintVisit(el,n){
+    if(n>=VISIT_MIN){ el.textContent=n+'번 다녀감'; el.style.display='inline'; }
+    else { el.textContent=''; el.style.display='none'; }
+  }
+  function fillVisitCount(park,dong){
+    var el=document.getElementById('dVisits'); if(!el)return;
+    var d=dong||window.myDong||window.myCity||'';
+    var key=park+'|'+d;
+    if(_visitCountCache[key]!=null){ paintVisit(el,_visitCountCache[key]); return; }
+    if(!(window.__fbReady&&window.__db))return;
+    window.__db.collection('visits').where('park','==',park).get().then(function(snap){
+      var n=0; snap.forEach(function(doc){ var v=doc.data(); if(!d||(v.dong||'')===d) n++; });
+      _visitCountCache[key]=n; paintVisit(el,n);
+    }).catch(function(){});
+  }
   function renderVisitDetail(){
     var box=document.getElementById('rcDetail');
     if(!_selDay){box.style.display='none';return;}
@@ -2277,9 +2354,10 @@ var _calY=null, _calM=null;
     var CHEER=["오늘도 한 걸음 🌱","몸이 고마워할 거예요 💚","잘하셨어요, 오늘의 나 👏","오늘도 나를 위한 시간 🍃","한 걸음이 건강이 돼요 🌿","오늘도 걸으셨네요, 멋져요 ✨","몸도 마음도 가벼워졌죠 🌤️","이렇게 하루하루가 쌓여요 🌳","오늘도 나와 줘서 고마워요 💛","작은 걸음, 큰 건강 🚶","오늘의 산책, 참 잘했어요 🌸","꾸준함이 제일 어려운데 대단해요 🙌","오늘도 나를 아꼈어요 💚","발걸음마다 건강이 따라와요 🌿","오늘도 좋은 하루 만드셨네요 ☀️","몸이 튼튼해지고 있어요 💪","오늘도 걸은 나, 칭찬해요 🌱","이 습관이 나를 지켜줘요 🛡️","오늘도 한 뼘 더 건강해졌어요 🌷","내일도 이 길에서 만나요 🌾"];
     meta.push('<span class="d-cheer">'+CHEER[(d.getDate())%CHEER.length]+'</span>');
     var h='<div class="d-date">'+(d.getMonth()+1)+'월 '+d.getDate()+'일 '+dn+'요일</div>';
-    if(rec.visited)h+='<div class="d-park">\u{1F33F} '+String(rec.visited).replace(/</g,'&lt;')+'</div>';
+    if(rec.visited)h+='<div class="d-park"><span class="d-pk-name">\u{1F33F} '+String(rec.visited).replace(/</g,'&lt;')+'</span><span class="d-visits" id="dVisits"></span></div>';
     h+='<div class="d-meta">'+meta.join(' \u00B7 ')+'</div>';
     box.innerHTML=h;box.style.display='block';
+    if(rec.visited) fillVisitCount(rec.visited, rec.dong);
   }
   function shareRecordVisit(){
     var st=loadStreak(),today=dateKey(new Date());
@@ -2396,8 +2474,7 @@ var _calY=null, _calM=null;
   var tickerTimer=null, tickerIdx=0, tickerData=[];
 
   function nick(){
-    var n=null; try{ n=localStorage.getItem('gongo_nick_v1'); }catch(e){}
-    return n || '산책러';
+    return window.gongoGetNick() || '산책러';
   }
   function region(){ return (window.myDong)|| (window.myCity) || ''; }
   function esc(s){ return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -2538,7 +2615,7 @@ var _calY=null, _calM=null;
     var i=document.getElementById('nkInput'); if(!i)return;
     var v=i.value.trim();
     if(v.length<2||v.length>12){ if(window.showToast)window.showToast('\uB2C9\uB124\uC784\uC740 2~12\uC790\uB85C \uC815\uD574\uC8FC\uC138\uC694'); return; }
-    try{ localStorage.setItem('gongo_nick_v1', v); }catch(e){}
+    window.gongoSetNick(v);
     if(window.__gongoRank) window.__gongoRank.nick=v;
     if(typeof window.renderRankLine==='function'){ try{ window.renderRankLine(); }catch(e){} }
     window.nkCancel();
