@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v7.0
+  공원갈까 v7.1
+  - 방명록 티커: 닉네임 pill 왼쪽 고정, 글 부분만 가로 스크롤 (flex 구조)
+  (구) v7.0
   - 방명록 티커: 긴 글 잘림(…) → 가로 스크롤(오른쪽→왼쪽 1회) 처리, 짧은 글은 정지
   (구) v6.999
   - 방명록 티커: 닉네임 pill 뒤 구분점(·) 제거
@@ -81,7 +83,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v7.0</title>
+<title>공원갈까 v7.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -569,11 +571,12 @@ body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--paper);c
 .gb-ico{font-size:15px}
 .gb-write{flex:none;border:none;font-size:12px;font-weight:800;color:#fff;background:#D4621A;border-radius:9px;padding:6px 12px;cursor:pointer;white-space:nowrap;box-shadow:1px 1px 0 #2C1810}
 .gb-track{height:24px;overflow:hidden;position:relative;background:#FBF6EE;border-radius:9px;padding:0 10px;cursor:pointer}
-.gb-line{display:block;font-size:13.5px;font-weight:800;color:#2C1810;line-height:24px;white-space:nowrap;overflow:hidden;transition:transform .5s ease,opacity .5s ease}
-.gb-in{display:inline-block;white-space:nowrap;will-change:transform}
+.gb-line{display:flex;align-items:center;height:24px;font-size:13.5px;font-weight:800;color:#2C1810;white-space:nowrap;transition:transform .5s ease,opacity .5s ease}
+.gb-msgwrap{flex:1;min-width:0;overflow:hidden;margin-left:6px}
+.gb-msg{display:inline-block;white-space:nowrap;will-change:transform}
 .gb-line.up{transform:translateY(-24px);opacity:0}
 .gb-line b{color:#D4621A}
-.gb-line .gb-nk{color:#fff;background:#D4621A;border-radius:6px;padding:1px 7px;font-weight:900;margin-right:1px}
+.gb-line .gb-nk{flex:none;color:#fff;background:#D4621A;border-radius:6px;padding:1px 7px;font-weight:900;white-space:nowrap}
 /* 시트 */
 .gb-sheet{position:fixed;inset:0;z-index:200;display:none}
 .gb-sheet.on{display:block}
@@ -2440,7 +2443,7 @@ var _calY=null, _calM=null;
   function fmtLine(item){
     // 동네 표시는 잠시 보류 (위치 정확도 확보 후 재도입)
     // var r=item.region?('<b>'+esc(item.region)+'</b> '):'';
-    return '<b class="gb-nk">'+esc(item.nick)+'님</b> '+esc(item.text);
+    return '<b class="gb-nk">'+esc(item.nick)+'님</b><span class="gb-msgwrap"><span class="gb-msg">'+esc(item.text)+'</span></span>';
   }
   var unsub=null;
   function startTicker(){
@@ -2473,17 +2476,17 @@ var _calY=null, _calM=null;
   }
   function showTickerLine(){
     var track=document.getElementById('gbTrack'); if(!track||!tickerData.length)return;
-    track.innerHTML='<span class="gb-line"><span class="gb-in">'+fmtLine(tickerData[tickerIdx%tickerData.length])+'</span></span>';
-    var line=track.querySelector('.gb-line'), inner=track.querySelector('.gb-in');
-    if(!line||!inner)return;
-    var over=inner.scrollWidth - line.clientWidth;   // 폭 넘치는 양(px)
+    track.innerHTML='<span class="gb-line">'+fmtLine(tickerData[tickerIdx%tickerData.length])+'</span>';
+    var wrap=track.querySelector('.gb-msgwrap'), msg=track.querySelector('.gb-msg');
+    if(!wrap||!msg)return;
+    var over=msg.scrollWidth - wrap.clientWidth;      // 글이 칸 넘치는 양(px)
     if(over>4){
-      inner.style.transition='none';
-      inner.style.transform='translateX(0)';
-      void inner.offsetWidth;                        // 리플로우 강제
-      var dur=Math.min(Math.max(over/40,2),12);      // 40px/s, 2~12초
-      inner.style.transition='transform '+dur+'s linear 1.2s'; // 1.2초 뒤 흐름
-      inner.style.transform='translateX(-'+over+'px)';
+      msg.style.transition='none';
+      msg.style.transform='translateX(0)';
+      void msg.offsetWidth;                           // 리플로우 강제
+      var dur=Math.min(Math.max(over/40,2),12);       // 40px/s, 2~12초
+      msg.style.transition='transform '+dur+'s linear 1.2s'; // 1.2초 뒤 흐름
+      msg.style.transform='translateX(-'+over+'px)';
     }
   }
   function nextLine(){
