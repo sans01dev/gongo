@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.996
+  공원갈까 v6.997
+  - 방명록 티커 회전 주기 60초 → 20초 (세션 30초 대응)
+  (구) v6.996
   - 방명록 안내 문구 수정: "전체 방명록" → "나의 전체 방명록"(본인 것만 조회)
   (구) v6.995
   - 방명록 안내 카드 위치: 산책 그래프 카드 아래로 이동
@@ -73,7 +75,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.996</title>
+<title>공원갈까 v6.997</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -2460,7 +2462,7 @@ var _calY=null, _calM=null;
     }
     if(tickerTimer) clearInterval(tickerTimer);
     tickerIdx=0; showTickerLine();
-    tickerTimer=setInterval(nextLine, 60000);
+    tickerTimer=setInterval(nextLine, 20000);
   }
   function showTickerLine(){
     var track=document.getElementById('gbTrack'); if(!track||!tickerData.length)return;
