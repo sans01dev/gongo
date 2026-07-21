@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <!--
-  공원갈까 v6.997
+  공원갈까 v6.998
+  - 방명록 티커: "님"을 닉네임 pill 안으로 이동 ([경남산속]님 → [경남산속님])
+  (구) v6.997
   - 방명록 티커 회전 주기 60초 → 20초 (세션 30초 대응)
   (구) v6.996
   - 방명록 안내 문구 수정: "전체 방명록" → "나의 전체 방명록"(본인 것만 조회)
@@ -75,7 +77,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>공원갈까 v6.997</title>
+<title>공원갈까 v6.998</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -2433,7 +2435,7 @@ var _calY=null, _calM=null;
   function fmtLine(item){
     // 동네 표시는 잠시 보류 (위치 정확도 확보 후 재도입)
     // var r=item.region?('<b>'+esc(item.region)+'</b> '):'';
-    return '<b class="gb-nk">'+esc(item.nick)+'</b>님 &middot; '+esc(item.text);
+    return '<b class="gb-nk">'+esc(item.nick)+'님</b> &middot; '+esc(item.text);
   }
   var unsub=null;
   function startTicker(){
